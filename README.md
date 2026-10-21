@@ -1,4 +1,4 @@
-# Team Nest
+# ITKAN Nest
 
 An FTC/FRC sheet nesting workspace. Upload one flat STEP/STP or DXF design per
 file, assign SWYFT stock, enter quantities and sheet settings, then export a
@@ -86,7 +86,7 @@ source is in `convex/`. It is ready to connect but **no cloud deployment is
 configured by this checkout**. The local workspace continues working without it.
 
 1. In a terminal, run `bun run convex:dev`. Sign in and explicitly create/select
-   a **new Team Nest project**, rather than selecting your scouting deployment.
+   a **new ITKAN Nest project**, rather than selecting your scouting deployment.
    Convex generates deployment bindings and writes `.env.local`.
 2. In another terminal, run:
 

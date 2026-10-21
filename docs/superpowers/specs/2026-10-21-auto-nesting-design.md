@@ -1,4 +1,4 @@
-# Team Nest: STEP/DXF sheet nesting
+# ITKAN Nest: STEP/DXF sheet nesting
 
 ## Agreed outcome
 

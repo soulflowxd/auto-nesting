@@ -10,7 +10,7 @@ export const MAX_PROJECT_BYTES = 750 * 1024;
 export function parseJob(json: string): JobDocument {
   if (new TextEncoder().encode(json).length > MAX_PROJECT_BYTES) throw new Error('Project exceeds the 750 KB limit. Split it into smaller jobs.');
   const doc = JSON.parse(json) as JobDocument;
-  if (!doc || doc.version !== 1 || typeof doc.name !== 'string' || !doc.name.trim() || doc.name.length > 120 || !Array.isArray(doc.parts) || doc.parts.length > 100 || !doc.settings || Array.isArray(doc.settings) || typeof doc.settings !== 'object') throw new Error('This is not a supported Team Nest project.');
+  if (!doc || doc.version !== 1 || typeof doc.name !== 'string' || !doc.name.trim() || doc.name.length > 120 || !Array.isArray(doc.parts) || doc.parts.length > 100 || !doc.settings || Array.isArray(doc.settings) || typeof doc.settings !== 'object') throw new Error('This is not a supported ITKAN Nest project.');
   const ids = new Set<string>();
   let units = 0;
   for (const part of doc.parts) {
