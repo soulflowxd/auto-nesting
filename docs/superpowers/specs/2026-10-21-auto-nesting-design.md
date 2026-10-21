@@ -7,6 +7,8 @@ thickness and quantity, arrange compatible parts on stock sheets, preview the
 result, and download one DXF per sheet. The user approved this flow and asked
 for material and thickness selection during import, then narrowed the stock
 presets to SWYFT Robotics sheet materials.
+The user also requested inches as the default everywhere, with millimeter
+equivalents visible alongside every physical dimension.
 
 ## User flow
 
@@ -21,13 +23,37 @@ presets to SWYFT Robotics sheet materials.
    that do not fit. Multiple sheets are created when needed.
 6. Export each sheet as a DXF named with its material, thickness and sheet number.
 
+## Display and input units
+
+Inches are the default for every dimension input, primary label, sheet preset,
+part size, thickness selector, spacing, edge margin, preview dimension, result
+summary and export. Always show the corresponding millimeter value alongside
+the inch value, including before any files are imported. For example, label
+3 mm stock as `0.1181 in (3 mm)` and 6 mm stock as `0.2362 in (6 mm)`.
+Include units in filename thickness labels as well.
+
+Default editable dimensions to inches, with a visible millimeter equivalent
+that updates on edit. An explicit inch/mm input-unit switch may be provided,
+but changing input units must preserve the physical value and keep both units
+visible. A unitless DXF defaults to inches in the import panel, with an explicit
+millimeter option; unit-bearing DXFs and STEP retain their source scale.
+
+Store exact catalog thicknesses and stock sizes, and convert using exactly
+25.4 mm per inch. Display rounding must never overwrite stock values, split
+nesting groups or change exported geometry. Use sufficient decimal places for
+small clearances. Export DXF with inch coordinates and declared inch units by
+default. Material presets remain based on the vendor's exact metric dimensions.
+
 ## Materials and thickness
 
 Use the following fixed stock combinations in the import selector, based on
 the user's requested materials and SWYFT's sheet-material catalog checked on
 2026-10-21. Thickness options depend on the selected material.
 
-| Material | Thickness | Default sheet size (mm) |
+The following table records canonical vendor dimensions in millimeters; the
+app displays inches first with these metric values alongside them.
+
+| Material | Thickness (mm) | Default sheet size (mm) |
 | --- | --- | --- |
 | 7075-T6 aluminum | 3 mm, 6 mm | 700 x 700 |
 | SWYFT SRPP, solid | 1.75 mm | 660 x 737 |
@@ -104,7 +130,7 @@ Components have separate responsibilities:
 - Preview: render the same transformed loops that will be exported, with sheet
   selection, part identification and fit/utilization information.
 - Export: validate placements and generate DXF in sheet coordinates with units,
-  closed outer contours, holes and separate datum information.
+closed outer contours, holes and separate datum information.
 
 ## Geometry contract
 
@@ -120,7 +146,8 @@ Report open contours and unsupported geometry rather than exporting incomplete
 parts. One imported file represents one part design; quantities repeat it.
 
 Use the reference core's inches internally and explicit conversion at UI
-boundaries. Export DXF with declared units matching its coordinates. Curve
+boundaries. Export DXF in inches by default with declared units matching its
+coordinates. Curve
 flattening tolerance must be documented and consistent between preview/export.
 
 The reference nester uses contour rasterization with discrete rotations; it is
@@ -141,13 +168,17 @@ and kerf offsets remain settings in the team's cutting software.
 A focused workspace with the import/parts panel on the left, a large sheet
 preview in the center, and material-group/sheet controls alongside it. The
 empty state clearly starts with file upload. Primary actions are Import,
-Auto Nest and Export DXF. Use visible numeric units, clear processing/error
+Auto Nest and Export DXF. Show inches first and millimeter equivalents for
+every physical dimension. Use clear processing/error
 states, accessible labels and keyboard-operable controls. Adapt panels to
 narrow screens without hiding required inputs.
 
 ## Verification and acceptance
 
 - Import DXF outlines with holes and verify dimensions in inches and millimeters.
+- Verify inches are the initial input/display/export units, millimeter values
+  remain visible, and unit changes/display rounding preserve exact geometry
+  and stock grouping. Verify metric input files are not interpreted as inches.
 - Import valid flat STEP fixtures, preserve holes and measured thickness, and
   reject bent/multi-solid or non-prismatic fixtures with clear errors.
 - Verify mixed materials and thicknesses produce separate groups and sheets.
