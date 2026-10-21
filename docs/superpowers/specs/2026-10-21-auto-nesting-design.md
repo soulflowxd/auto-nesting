@@ -5,7 +5,8 @@
 A local web app for an FTC/FRC team. Import flat parts, assign material,
 thickness and quantity, arrange compatible parts on stock sheets, preview the
 result, and download one DXF per sheet. The user approved this flow and asked
-for material and thickness selection during import.
+for material and thickness selection during import, then narrowed the stock
+presets to SWYFT Robotics sheet materials.
 
 ## User flow
 
@@ -22,19 +23,51 @@ for material and thickness selection during import.
 
 ## Materials and thickness
 
-Offer editable presets for 6061 aluminum, 5052 aluminum, polycarbonate, plywood,
-MDF and a custom material. Thickness accepts positive numeric values in inches
-or millimeters, with convenient presets such as 1/16, 1/8, 3/16 and 1/4 inch.
-Presets describe stock; they do not assert that a material suits a machine.
+Use the following fixed stock combinations in the import selector, based on
+the user's requested materials and SWYFT's sheet-material catalog checked on
+2026-10-21. Thickness options depend on the selected material.
+
+| Material | Thickness | Default sheet size (mm) |
+| --- | --- | --- |
+| 7075-T6 aluminum | 3 mm, 6 mm | 700 x 700 |
+| SWYFT SRPP, solid | 1.75 mm | 660 x 737 |
+| SWYFT SRPP, solid | 3 mm | 610 x 610 |
+| SWYFT SRPP, foam core | 6 mm | 610 x 610 |
+| White Delrin / acetal (POM), user-requested stock | 3 mm | 600 x 600 |
+| Polycarbonate | 3 mm, 6 mm | 745 x 745 |
+| ABS grid sheet | 1.5 mm | 456 x 456 |
+
+Sources:
+- https://swyftrobotics.com/tools/materials
+- https://swyftrobotics.com/machines/swyft-composite
+- https://swyftrobotics.com/machines/acetal-sheets
+
+The acetal catalog uses the name Acetal (POM); white color and Delrin branding
+are the user's requested stock description, not independently verified vendor
+claims. The comparison table calls this stock 3 mm while SWYFT's sheet kit
+calls it 1/8 inch. Keep the user's requested 3 mm preset, label it nominal, and
+allow the measured stock thickness to be recorded explicitly without treating
+3 mm and 3.175 mm as equivalent.
+
+Offer black/white SRPP color selection as listed by SWYFT; color is part of the
+stock identity, so different colors never share a sheet. Default SRPP to black
+and acetal to white. The SRPP foam-core construction has its own material ID,
+distinct from solid SRPP. Preserve the fixed catalog combinations instead of
+offering generic aluminum, plywood or MDF presets. User-entered dimensions
+allow nesting onto smaller stock and remnants. Presets describe stock; they
+do not assert that a material suits a machine. Catalog data ships with the app
+and does not require a live connection or promise current vendor availability.
 
 Store thickness in a canonical millimeter representation and group using a
 normalized key so unit conversion noise does not split equivalent selections.
-Material identity and thickness together define a nesting group. Different
+Material identity, color and thickness together define a nesting group. Different
 groups never share a sheet. Sheet settings belong to each group.
 
 Material is user supplied. DXF does not supply a reliable stock thickness.
-For STEP, display measured thickness and use it as the initial selection unless
-the user has explicitly selected a batch thickness. If selected and measured
+For STEP, display measured thickness and use it as the initial selection when
+it matches a supported stock thickness and no batch thickness was selected.
+Otherwise require a stock selection and display the measured STEP thickness.
+If selected and measured
 thickness differ, show both with a visible mismatch message; never silently
 change the flat profile or scale it to match stock thickness.
 
