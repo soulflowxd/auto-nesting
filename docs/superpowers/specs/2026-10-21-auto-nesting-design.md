@@ -61,7 +61,6 @@ app displays inches first with these metric values alongside them.
 | SWYFT SRPP, foam core | 6 mm | 610 x 610 |
 | White Delrin / acetal (POM), user-requested stock | 3 mm | 600 x 600 |
 | Polycarbonate | 3 mm, 6 mm | 745 x 745 |
-| ABS grid sheet | 1.5 mm | 456 x 456 |
 
 Sources:
 - https://swyftrobotics.com/tools/materials
@@ -79,7 +78,8 @@ Offer black/white SRPP color selection as listed by SWYFT; color is part of the
 stock identity, so different colors never share a sheet. Default SRPP to black
 and acetal to white. The SRPP foam-core construction has its own material ID,
 distinct from solid SRPP. Preserve the fixed catalog combinations instead of
-offering generic aluminum, plywood or MDF presets. User-entered dimensions
+offering generic aluminum, plywood or MDF presets. ABS grid is excluded at
+the user's request. User-entered dimensions
 allow nesting onto smaller stock and remnants. Presets describe stock; they
 do not assert that a material suits a machine. Catalog data ships with the app
 and does not require a live connection or promise current vendor availability.
