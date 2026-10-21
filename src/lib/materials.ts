@@ -5,7 +5,7 @@ export type StockPreset = {
 
 export const STOCKS: StockPreset[] = [
   ...[3, 6].map(thicknessMm => ({id: `al7075-${thicknessMm}`, material: '7075-T6 aluminum', color: 'Natural', thicknessMm, widthMm: 700, heightMm: 700})),
-  ...[1.75, 3, 6].flatMap(thicknessMm => ['Black', 'White'].map(color => ({
+  ...[1.75, 3, 6].flatMap(thicknessMm => (thicknessMm===1.75?['Black']:['Black', 'White']).map(color => ({
     id: `srpp-${thicknessMm}-${color.toLowerCase()}`,
     material: thicknessMm === 6 ? 'SRPP · foam core' : 'SRPP · solid', color, thicknessMm,
     widthMm: thicknessMm === 1.75 ? 660 : 610, heightMm: thicknessMm === 1.75 ? 737 : 610,

@@ -3,11 +3,11 @@ import { STOCKS, getStock, thicknessLabel } from '../lib/materials';
 export function StockSelector({value,onChange,disabled=false}:{value:string;onChange:(id:string)=>void;disabled?:boolean}) {
   const selected=getStock(value);
   const materialOptions=[...new Set(STOCKS.map(s=>s.material))];
-  const thicknesses=[...new Set(STOCKS.filter(s=>s.material===selected.material).map(s=>s.thicknessMm))];
-  const colors=[...new Set(STOCKS.filter(s=>s.material===selected.material&&s.thicknessMm===selected.thicknessMm).map(s=>s.color))];
+  const thicknesses=[...new Set(STOCKS.filter(s=>s.material===selected.material&&s.color===selected.color).map(s=>s.thicknessMm))];
+  const colors=[...new Set(STOCKS.filter(s=>s.material===selected.material).map(s=>s.color))];
   const change=(material:string,thicknessMm:number,color:string)=>{
     const candidates=STOCKS.filter(s=>s.material===material);
-    const chosen=candidates.find(s=>s.thicknessMm===thicknessMm&&s.color===color)??candidates.find(s=>s.thicknessMm===thicknessMm)??candidates[0];
+    const chosen=candidates.find(s=>s.thicknessMm===thicknessMm&&s.color===color)??candidates.find(s=>s.color===color)??candidates.find(s=>s.thicknessMm===thicknessMm)??candidates[0];
     onChange(chosen.id);
   };
   return <div className="stock-selector">
