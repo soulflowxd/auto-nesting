@@ -238,14 +238,25 @@ function dilate(mask: Mask, radius: number): Mask {
   const w = mask.w + radius * 2;
   const h = mask.h + radius * 2;
   const cells = new Uint8Array(w * h);
-  for (let row = 0; row < mask.h; row += 1) {
-    for (let col = 0; col < mask.w; col += 1) {
-      if (!mask.cells[row * mask.w + col]) continue;
-      for (let dy = -radius; dy <= radius; dy += 1) {
-        for (let dx = -radius; dx <= radius; dx += 1) {
-          cells[(row + radius + dy) * w + (col + radius + dx)] = 1;
-        }
-      }
+  // Square dilation is separable. Sliding windows visit each output cell
+  // twice instead of stamping a whole square for every occupied input cell.
+  const horizontal=new Uint8Array(w*mask.h);
+  for(let row=0;row<mask.h;row++){
+    let count=0;
+    for(let col=0;col<w;col++){
+      if(col<mask.w)count+=mask.cells[row*mask.w+col];
+      const leaving=col-2*radius-1;
+      if(leaving>=0&&leaving<mask.w)count-=mask.cells[row*mask.w+leaving];
+      horizontal[row*w+col]=count>0?1:0;
+    }
+  }
+  for(let col=0;col<w;col++){
+    let count=0;
+    for(let row=0;row<h;row++){
+      if(row<mask.h)count+=horizontal[row*w+col];
+      const leaving=row-2*radius-1;
+      if(leaving>=0&&leaving<mask.h)count-=horizontal[leaving*w+col];
+      cells[row*w+col]=count>0?1:0;
     }
   }
   return { w, h, cells };
@@ -392,6 +403,13 @@ function findBottomLeft(sheet: Sheet, mask: Bitmask, from = 0): Spot | null {
 function findTightest(sheet: Sheet, mask: Bitmask): Spot | null {
   let best: Spot | null = null;
   for (let row = 0; row + mask.h <= sheet.grid.h; row += 1) {
+    const rowMin=Math.min(sheet.used?.minRow??row,row);
+    const rowMax=Math.max(sheet.used?.maxRow??row+mask.h-1,row+mask.h-1);
+    const minWidth=Math.max(mask.w,sheet.used?sheet.used.maxCol-sheet.used.minCol+1:0);
+    if(best&&(rowMax-rowMin+1)*minWidth>=best.cost){
+      if(row>=(sheet.used?.minRow??0))break;
+      continue;
+    }
     for (let col = 0; col + mask.w <= sheet.grid.w; col += 1) {
       const minCol = Math.min(sheet.used?.minCol ?? col, col);
       const minRow = Math.min(sheet.used?.minRow ?? row, row);
@@ -399,7 +417,12 @@ function findTightest(sheet: Sheet, mask: Bitmask): Spot | null {
       const maxRow = Math.max(sheet.used?.maxRow ?? row + mask.h - 1, row + mask.h - 1);
       const cost = (maxCol - minCol + 1) * (maxRow - minRow + 1);
       // Ties go to the lower, more-left position already held.
-      if (best && cost >= best.cost) continue;
+      if (best && cost >= best.cost) {
+        // Past the occupied left edge the envelope can only grow. All later
+        // columns have the same or worse cost, so skip the rest of this row.
+        if(col>=(sheet.used?.minCol??0))break;
+        continue;
+      }
       if (!canPlace(sheet, mask, col, row)) continue;
       best = { col, row, cost };
     }
