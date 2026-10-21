@@ -34,3 +34,4 @@
 }
 
 .preview-panel>.preview-footer{padding:0 0 12px}.preview-panel>.nest-summary{border-top:0;border-bottom:1px solid #dfe4eb;padding:0 0 14px;margin-bottom:14px}
+.project-drop-overlay{position:fixed;inset:14px;z-index:30;pointer-events:none;border:2px dashed var(--accent);border-radius:12px;background:#f0faf5ed;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--accent);text-align:center;padding:24px}.project-drop-overlay strong{font-size:23px}.project-drop-overlay span{font-size:13px;color:#546b62}.project-drop-overlay small{font-size:11px;color:#788b83}

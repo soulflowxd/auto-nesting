@@ -23,6 +23,7 @@ not load it. Files are processed in browser workers and stay on your device. No 
 storage or sign-in is used.
 
 **Save job** downloads a `.nest.json` project including the current nest.
+Drag a project JSON anywhere onto the workspace, or use Open job.
 Opening restores the layout immediately, with geometry and clearance checked.
 Older projects without layouts still open and can be nested again. DXF downloads
 use the project name (with a sheet suffix for multiple sheets).

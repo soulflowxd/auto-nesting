@@ -15,6 +15,8 @@ export default function App() {
   const {name,setName,parts,settings,results,clear}=useJobStore();
   const [busy,setBusy]=useState<'import'|'nest'|null>(null);
   const [error,setError]=useState('');
+  const [draggingFiles,setDraggingFiles]=useState(false);
+  const dragDepth=useRef(0);
   const [active,setActive]=useState('al7075-3');
   const [sheetIndices,setSheetIndices]=useState<Record<string,number>>({});
   const [help,setHelp]=useState(false);
@@ -44,14 +46,30 @@ export default function App() {
     finally {setBusy(null);controller.current=null;}
   }
   async function openFile(file?:File) {
-    if(!file)return;
+    if(!file||busy)return;
+    setBusy('import');
     try {if(file.size>MAX_PROJECT_BYTES)throw new Error('Project exceeds 20 MB.');const job=parseJob(await file.text());useJobStore.getState().loadJob(job);setError('');}
     catch(e){setError(e instanceof Error?e.message:'Project could not be opened.');}
     if(open.current)open.current.value='';
+    setBusy(null);
   }
-  return <div className="app-shell">
+  return <div className="app-shell"
+    onDragEnterCapture={e=>{if(e.dataTransfer.types.includes('Files')){dragDepth.current++;setDraggingFiles(true);}}}
+    onDragLeaveCapture={()=>{dragDepth.current=Math.max(0,dragDepth.current-1);if(!dragDepth.current)setDraggingFiles(false);}}
+    onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault();}}
+    onDrop={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault();}}
+    onDropCapture={e=>{
+      dragDepth.current=0;setDraggingFiles(false);
+      const files=Array.from(e.dataTransfer.files);
+      if(!files.some(file=>/\.json$/i.test(file.name)))return;
+      e.preventDefault();e.stopPropagation();
+      if(busy)return;
+      if(files.length!==1){setError('Drop one project JSON at a time.');return;}
+      void openFile(files[0]);
+    }}>
+    {draggingFiles&&!busy&&<div className="project-drop-overlay" role="status"><FolderOpen size={32}/><strong>Drop a project JSON to open it</strong><span>Restores parts, sheet settings and saved nest · replaces the current job</span><small>Drop STEP or DXF files in the Import parts area</small></div>}
     <header className="app-header"><a className="brand" href="/" aria-label="ITKAN Nest home"><span className="brand-mark"><Boxes size={23} strokeWidth={1.8}/></span><span>ITKAN<span className="brand-light"> Nest</span><small>ROBOTICS FABRICATION</small></span></a><div className="header-divider"/><span className="workspace-breadcrumb">Workspace<ChevronRight size={13}/><span>Sheet nesting</span></span><div className="header-actions"><span className="local-status"><span className="status-dot"/>Local workspace</span><button className="icon-button" title="How it works" aria-label="How it works" onClick={()=>setHelp(true)}><CircleHelp size={18}/></button></div></header>
-    <div className="job-toolbar"><div className="job-name-wrap"><span className="job-name-icon"><FolderOpen size={18}/></span><input className="job-name" aria-label="Job name" value={name} maxLength={120} onChange={e=>setName(e.target.value)}/><span className="job-format">STEP + DXF</span></div><div className="job-actions"><input ref={open} type="file" accept=".json" className="sr-only" aria-label="Open saved job" disabled={!!busy} onChange={e=>void openFile(e.target.files?.[0])}/><button className="text-button" disabled={!!busy} onClick={()=>open.current?.click()}><FolderOpen size={15}/><span>Open job</span></button><button className="text-button" disabled={!!busy||!parts.length||!name.trim()} onClick={()=>downloadFile(`${name.replace(/[^a-zA-Z0-9_-]/g,'-')}.nest.json`,JSON.stringify(currentJob()),'application/json')}><Save size={15}/><span>Save job</span></button><button className="icon-button" aria-label="Start new job" title="Start new job" disabled={!!busy||!parts.length} onClick={()=>setReset(true)}><RotateCcw size={15}/></button><span className="toolbar-divider"/><button className="secondary-button" disabled={!!busy||!canExport} title="Export the selected sheet as DXF" onClick={exportCurrentSheet}><Download size={15}/>Export DXF</button>{busy==='nest'?<button className="primary-button" onClick={()=>controller.current?.abort()}><X size={16}/>Cancel nesting</button>:<button className="primary-button" onClick={()=>void nest()} disabled={!!busy||!parts.length}><Play size={15} fill="currentColor"/>Auto Nest</button>}</div></div>
+    <div className="job-toolbar"><div className="job-name-wrap"><span className="job-name-icon"><FolderOpen size={18}/></span><input className="job-name" aria-label="Job name" value={name} maxLength={120} onChange={e=>setName(e.target.value)}/><span className="job-format">STEP + DXF</span></div><div className="job-actions"><input ref={open} type="file" accept=".json" className="sr-only" aria-label="Open saved job" disabled={!!busy} onChange={e=>void openFile(e.target.files?.[0])}/><button className="text-button" disabled={!!busy} title="Open a project JSON, or drag it anywhere onto the workspace" onClick={()=>open.current?.click()}><FolderOpen size={15}/><span>Open job</span></button><button className="text-button" disabled={!!busy||!parts.length||!name.trim()} onClick={()=>downloadFile(`${name.replace(/[^a-zA-Z0-9_-]/g,'-')}.nest.json`,JSON.stringify(currentJob()),'application/json')}><Save size={15}/><span>Save job</span></button><button className="icon-button" aria-label="Start new job" title="Start new job" disabled={!!busy||!parts.length} onClick={()=>setReset(true)}><RotateCcw size={15}/></button><span className="toolbar-divider"/><button className="secondary-button" disabled={!!busy||!canExport} title="Export the selected sheet as DXF" onClick={exportCurrentSheet}><Download size={15}/>Export DXF</button>{busy==='nest'?<button className="primary-button" onClick={()=>controller.current?.abort()}><X size={16}/>Cancel nesting</button>:<button className="primary-button" onClick={()=>void nest()} disabled={!!busy||!parts.length}><Play size={15} fill="currentColor"/>Auto Nest</button>}</div></div>
     {error&&<div className="global-error" role="alert"><span>{error}</span><button aria-label="Dismiss error" className="icon-button" onClick={()=>setError('')}><X size={16}/></button></div>}
     <div className="workspace-grid"><aside className="parts-sidebar"><ImportPanel busy={!!busy} onActivity={isBusy=>setBusy(isBusy?'import':null)}/><PartList disabled={!!busy}/></aside><SheetPreview key={stockId} index={sheetIndex} onIndexChange={index=>setSheetIndices(s=>({...s,[stockId]:index}))} group={group} settings={sheetSettings} hasParts={parts.some(p=>p.stockId===stockId)} busy={busy==='nest'}/><StockPanel stockId={stockId} onSelect={setActive} disabled={!!busy}/></div>
     <footer className="app-footer"><span>Built for the parts that build your robot.</span><span>{busy?<><LoaderCircle size={12} className="spin"/>{busy==='import'?'Reading CAD geometry':'Calculating layout'}</>:<><span className="status-dot"/>Geometry processed on your device</>}</span><span>FTC / FRC</span></footer>
