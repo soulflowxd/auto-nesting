@@ -8,7 +8,7 @@ import { STOCKS, getStock } from '../lib/materials';
 
 type ImportStatus={name:string;error?:string;done?:boolean};
 export function ImportPanel({busy,onActivity}:{busy:boolean;onActivity:(value:boolean)=>void}) {
-  const [stockId,setStockId]=useState('al7075-3');
+  const [stockId,setStockId]=useState('srpp-3-black');
   const [unit,setUnit]=useState<UnitOverride>('in');
   const [autoThickness,setAutoThickness]=useState(false);
   const [statuses,setStatuses]=useState<ImportStatus[]>([]);

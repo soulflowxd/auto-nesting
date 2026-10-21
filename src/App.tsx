@@ -17,7 +17,7 @@ export default function App() {
   const [error,setError]=useState('');
   const [draggingFiles,setDraggingFiles]=useState(false);
   const dragDepth=useRef(0);
-  const [active,setActive]=useState('al7075-3');
+  const [active,setActive]=useState('srpp-3-black');
   const [sheetIndices,setSheetIndices]=useState<Record<string,number>>({});
   const [help,setHelp]=useState(false);
   const [reset,setReset]=useState(false);
@@ -26,7 +26,7 @@ export default function App() {
   const controller=useRef<AbortController|null>(null);
   const open=useRef<HTMLInputElement>(null);
   const groups=[...new Set(parts.map(p=>p.stockId))];
-  const stockId=groups.includes(active)?active:groups[0]??'al7075-3';
+  const stockId=groups.includes(active)?active:groups[0]??'srpp-3-black';
   const sheetSettings=settings[stockId]??defaultSettings(getStock(stockId));
   const group=results.find(g=>g.stockId===stockId);
   const sheetIndex=Math.min(sheetIndices[stockId]??0,Math.max(0,(group?.nest.sheetsUsed??0)-1));

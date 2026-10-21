@@ -31,16 +31,14 @@ The active job is held in memory: save it before refreshing/closing the page.
 Changing a part, quantity or sheet setting invalidates its material group's
 layout. Run **Auto Nest** again before exporting that group.
 
-**Allowed rotations → Free rotation · automatic** lets the optimizer choose
+**Free rotation · automatic** lets the optimizer choose
 arbitrary floating-point angles. It derives orientations from the actual part
 geometry, searches for sheet-fit orientations, and adaptively refines angles
 against the current sheet's collision and packing score. There is no angle or
 increment to enter. The local refinement works down to approximately 0.000001°;
 this is numerical search precision, not a manufacturing accuracy guarantee.
-New jobs use free rotation by default. Quarter turns, 30° turns and locked
-orientation remain available for stock with direction constraints. Existing
-saved jobs retain their prior rotation rule. Changing the rule invalidates its
-layout and requires nesting again.
+The workspace always uses free rotation, including when opening older projects.
+New imports default to black solid SRPP at 3 mm.
 
 ## Materials
 

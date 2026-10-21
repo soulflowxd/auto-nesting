@@ -25,8 +25,8 @@ export function StockPanel({stockId,onSelect,disabled}:{stockId:string;onSelect:
       <button className="text-button rotate-sheet" disabled={disabled} onClick={()=>update({widthIn:s.heightIn,heightIn:s.widthIn})}><RotateCw size={13}/>Swap width & height</button>
     </div>
     <div className="panel-section"><h3 className="subheading"><MoveHorizontal size={15}/>Placement rules</h3><div className="field-pair dimension-pair"><DimensionField label="Part spacing" value={s.gapIn} onChange={gapIn=>update({gapIn})} disabled={disabled}/><DimensionField label="Edge margin" value={s.marginIn} onChange={marginIn=>update({marginIn})} disabled={disabled}/></div>
-      <label>Allowed rotations<select aria-label="Allowed rotations" disabled={disabled} value={s.rotation} onChange={e=>update({rotation:e.target.value as SheetSettings['rotation']})}><option value="free">Free rotation · automatic</option><option value="quarter">Quarter turns · 90°</option><option value="fine">Fine turns · 30°</option><option value="fixed">Locked · 0° only</option></select></label>
-      {s.rotation==='free'&&<p className="field-hint">The optimizer chooses and refines any angle automatically. No angle or increment to enter.</p>}
+      <label>Rotation<span className="static-field">Free rotation · automatic</span></label>
+      <p className="field-hint">The optimizer chooses and refines any angle automatically. No angle or increment to enter.</p>
       <p className="field-hint"><Scan size={13}/>Parts stay outside other parts’ holes.</p>
       {errors.length>0&&<div className="error-message" role="alert">{errors.join(' ')}</div>}
     </div>

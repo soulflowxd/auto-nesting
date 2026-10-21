@@ -11,7 +11,7 @@ type JobState = {
   setResults:(results:GroupResult[],revision:number)=>void;loadJob:(job:JobDocument)=>void;clear:()=>void;
 };
 function ensureSettings(parts:JobPart[],settings:Record<string,SheetSettings>) {
-  const next={...settings};
+  const next:Record<string,SheetSettings>=Object.fromEntries(Object.entries(settings).map(([id,value])=>[id,{...value,rotation:'free' as const}]));
   for(const p of parts) next[p.stockId]??=defaultSettings(getStock(p.stockId));
   return next;
 }
@@ -25,9 +25,9 @@ export const useJobStore=create<JobState>((set)=>({
     return {parts,settings:ensureSettings(parts,s.settings),results:s.results.filter(g=>!affected.has(g.stockId)),revision:s.revision+1};
   }),
   removePart:id=>set(s=>({parts:s.parts.filter(p=>p.id!==id),results:s.results.filter(g=>g.stockId!==s.parts.find(p=>p.id===id)?.stockId),revision:s.revision+1})),
-  updateSettings:(id,patch)=>set(s=>({settings:{...s.settings,[id]:{...(s.settings[id]??defaultSettings(getStock(id))),...patch}},results:s.results.filter(g=>g.stockId!==id),revision:s.revision+1})),
+  updateSettings:(id,patch)=>set(s=>({settings:{...s.settings,[id]:{...(s.settings[id]??defaultSettings(getStock(id))),...patch,rotation:'free'}},results:s.results.filter(g=>g.stockId!==id),revision:s.revision+1})),
   setResults:(results,revision)=>set(s=>s.revision===revision?{results}:{}),
-  loadJob:job=>{const results=restoreLayouts(job);set(s=>({name:job.name,parts:job.parts,settings:ensureSettings(job.parts,job.settings),results,revision:s.revision+1}));},
+  loadJob:job=>{const settings=ensureSettings(job.parts,job.settings);const results=restoreLayouts({...job,settings});set(s=>({name:job.name,parts:job.parts,settings,results,revision:s.revision+1}));},
   clear:()=>set(s=>({name:'Untitled job',parts:[],settings:{},results:[],revision:s.revision+1})),
 }));
 export function currentJob():JobDocument {
