@@ -12,6 +12,11 @@ Changes include configurable nesting options, a browser WASM asset override,
 explicit DXF entity colors and extra STEP regression tests. The application
 export path preserves sampled contours without upstream simplification.
 
+The original SRPP preview textures are copied without modification from the
+same reference revision: `public/materials/srpp-decal.png` (black woven SRPP)
+and `public/materials/srpp-white.jpg` (white woven SRPP). They are used for
+swatches and preview fills only; DXF cut geometry and colors are unchanged.
+
 No repository-wide LICENSE or NOTICE file was present at the inspected revision.
 This attribution does not assert an open-source redistribution license for
 that code. Confirm the author's permission before publishing/distributing a

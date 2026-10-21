@@ -20,6 +20,12 @@ export function getStock(id: string): StockPreset {
   return stock;
 }
 
+/** Original woven SRPP assets from INTERNAL_SOURCE; shared by solid and foam-core stock. */
+export function srppTextureUrl(stock: Pick<StockPreset, 'material' | 'color'>): string | null {
+  if (!stock.material.startsWith('SRPP')) return null;
+  return stock.color === 'White' ? '/materials/srpp-white.jpg' : '/materials/srpp-decal.png';
+}
+
 export const mmToIn = (mm: number) => mm / 25.4;
 export const inToMm = (inches: number) => inches * 25.4;
 export const number = (n: number, digits = 4) => Number(n.toFixed(digits)).toLocaleString('en-US', {maximumFractionDigits: digits});

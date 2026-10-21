@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Download, Maximize, Minus, Plus, LayoutDashboard, ArrowUpLeft, CircleAlert, CheckCircle2 } from 'lucide-react';
 import type { GroupResult } from '../lib/job';
-import { dimension, getStock, number, type SheetSettings } from '../lib/materials';
+import { dimension, getStock, number, srppTextureUrl, type SheetSettings } from '../lib/materials';
+import { MaterialPattern } from './MaterialPattern';
 import { holeFlags } from '../lib/reference/cut-edges';
 import { outlinePathData, outlineTransform, placementCentre } from '../lib/reference/nesting';
 import { polygonArea } from '../lib/validate-sheet';
 import { downloadFile, exportSheet } from '../lib/export-sheet';
 
 export function SheetPreview({group,settings,hasParts,busy,onError}:{group?:GroupResult;settings:SheetSettings;hasParts:boolean;busy:boolean;onError:(e:string)=>void}) {
+  const patternId=`sheet-material-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
   const [index,setIndex]=useState(0);
   const [zoom,setZoom]=useState(1);
   const [selected,setSelected]=useState<number|null>(null);
@@ -29,12 +31,15 @@ export function SheetPreview({group,settings,hasParts,busy,onError}:{group?:Grou
   const pad=Math.max(w,h)*.095;
   const textSize=Math.max(w,h)*.022;
   const stock=group?getStock(group.stockId):null;
+  const textured=stock!==null&&srppTextureUrl(stock)!==null;
+  const darkTexture=textured&&stock.color==='Black';
   return <main className="preview-panel">
     <div className="preview-heading"><div><span className="eyebrow">NESTING WORKSPACE</span><h1>Sheet preview</h1></div><span className={`result-status ${group&&!errors.length?'ready':''}`}>{group&&!errors.length?<CheckCircle2 size={13}/>:<span className="status-dot"/>}{busy?'Processing':group?'Layout ready':hasParts?'Ready to nest':'Waiting for parts'}</span></div>
     <div className="sheet-toolbar"><div className="sheet-tabs" aria-label="Sheets">{sheets?Array.from({length:sheets},(_,i)=><button key={i} className={currentIndex===i?'active':''} onClick={()=>{setIndex(i);setSelected(null);}}>Sheet {String(i+1).padStart(2,'0')}</button>):<span className="sheet-placeholder">Sheet 01</span>}</div><div className="zoom-controls"><button aria-label="Zoom out" title="Zoom out" onClick={()=>setZoom(z=>Math.max(.5,z-.25))}><Minus size={15}/></button><span>{Math.round(zoom*100)}%</span><button aria-label="Zoom in" title="Zoom in" onClick={()=>setZoom(z=>Math.min(3,z+.25))}><Plus size={15}/></button><button aria-label="Fit sheet" title="Fit sheet" onClick={()=>setZoom(1)}><Maximize size={15}/></button></div></div>
     <div className="sheet-viewport">
       {!placements.length?<div className="preview-empty"><div className="empty-sheet-icon"><LayoutDashboard size={39} strokeWidth={1}/></div><h2>{busy?'Finding a home for every part…':hasParts?'Your next cut starts here.':'A clean sheet. A better fit.'}</h2><p>{busy?'You can cancel while the layout is being calculated.':hasParts?'Check your sheet setup, then click Auto Nest.':'Import your STEP or DXF files to arrange parts on a sheet.'}</p>{!hasParts&&<span className="empty-point"><ArrowUpLeft size={16}/>Start with your material and CAD files</span>}<span className="empty-sheet-size">{dimension(w)} × {dimension(h)}</span></div>:<div className="svg-scroll" style={{width:`${zoom*100}%`,minHeight:`${zoom*100}%`}}><svg className="sheet-svg" viewBox={`${-pad} ${-pad} ${w+pad*2} ${h+pad*2}`} role="img" aria-label={`Sheet ${currentIndex+1}, ${placements.length} parts, ${number(utilization,1)} percent material utilization`}>
         <defs><pattern id="sheet-grid" width={w/20} height={w/20} patternUnits="userSpaceOnUse"><path d={`M ${w/20} 0 L 0 0 0 ${w/20}`} fill="none" stroke="#edf0f4" strokeWidth={w*.0006}/></pattern><filter id="sheet-shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy={w*.008} stdDeviation={w*.012} floodColor="#1c344a" floodOpacity=".09"/></filter></defs>
+        {stock&&<defs><MaterialPattern id={patternId} stock={stock} size={2}/></defs>}
         <rect width={w} height={h} fill="white" stroke="#cbd2da" strokeWidth={w*.001} filter="url(#sheet-shadow)"/>
         <rect width={w} height={h} fill="url(#sheet-grid)"/>
         <rect x={settings.marginIn} y={settings.marginIn} width={Math.max(0,w-settings.marginIn*2)} height={Math.max(0,h-settings.marginIn*2)} fill="none" stroke="#d2d8e2" strokeDasharray={`${w*.006} ${w*.006}`} strokeWidth={w*.0007}/>
@@ -44,7 +49,7 @@ export function SheetPreview({group,settings,hasParts,busy,onError}:{group?:Grou
         {placements.map((p,i)=>{
           const flags=holeFlags(p.outline);
           const centre=placementCentre(p,h);
-          return <g key={`${p.partId}-${i}`} onClick={()=>setSelected(selected===i?null:i)} className="placed-part"><title>{p.label} · {p.rotationDeg}°</title><g transform={outlineTransform(p,h)}><path d={outlinePathData(p.outline)} fill={selected===i?'#cce8e4':'#e5edf9'} fillRule="evenodd" stroke="none"/>{p.outline.map((loop,j)=><path key={j} d={outlinePathData([loop])} fill="none" stroke={flags[j]?'#e34b4b':'#2d64e4'} strokeWidth={selected===i?2:1.35} vectorEffect="non-scaling-stroke"/>)}</g><text x={centre.x} y={centre.y} textAnchor="middle" dominantBaseline="central" fill="#425671" fontSize={Math.min(textSize*.75,p.width*.15,p.height*.25)} pointerEvents="none">{String(i+1).padStart(2,'0')}</text></g>;
+          return <g key={`${p.partId}-${i}`} onClick={()=>setSelected(selected===i?null:i)} className="placed-part"><title>{p.label} · {p.rotationDeg}°</title><g transform={outlineTransform(p,h)}><path d={outlinePathData(p.outline)} fill={textured?`url(#${patternId})`:selected===i?'#cce8e4':'#e5edf9'} fillRule="evenodd" stroke="none"/>{textured&&selected===i&&<path d={outlinePathData(p.outline)} fill="#56c9b1" fillOpacity={.2} fillRule="evenodd" pointerEvents="none"/>}{p.outline.map((loop,j)=><path key={j} d={outlinePathData([loop])} fill="none" stroke={flags[j]?'#e34b4b':'#2d64e4'} strokeWidth={selected===i?2:1.35} vectorEffect="non-scaling-stroke"/>)}</g><text x={centre.x} y={centre.y} textAnchor="middle" dominantBaseline="central" fill={darkTexture?'#f1f5f9':'#425671'} paintOrder="stroke" stroke={darkTexture?'#111318':'#ffffff'} strokeWidth={textSize*.12} fontSize={Math.min(textSize*.75,p.width*.15,p.height*.25)} pointerEvents="none">{String(i+1).padStart(2,'0')}</text></g>;
         })}
         <path d={`M 0 ${h-pad*.12} V ${h} H ${pad*.12}`} fill="none" stroke="#657487" strokeWidth={w*.002}/>
         <text x={0} y={h+pad*.35} fill="#7a8796" fontSize={textSize*.65}>ORIGIN · 0, 0</text>

@@ -1,17 +1,21 @@
 import { Layers2, Trash2, FileBox } from 'lucide-react';
+import { useId } from 'react';
 import { useJobStore } from '../stores/job-store';
-import { STOCKS, dimension, getStock, stockLabel } from '../lib/materials';
+import { STOCKS, dimension, getStock, stockLabel, srppTextureUrl } from '../lib/materials';
+import { MaterialPattern } from './MaterialPattern';
 import { outlineFromAnalysis } from '../lib/reference/nest-outline';
 import { holeFlags } from '../lib/reference/cut-edges';
 import { outlinePathData } from '../lib/reference/nesting';
 import type { JobPart } from '../lib/job';
 
 function PartThumb({part}:{part:JobPart}) {
+  const patternId=`thumb-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
+  const stock=getStock(part.stockId);
   const loops=outlineFromAnalysis(part.analysis)??[];
   const flags=holeFlags(loops);
   const {width,height}=part.analysis.boundingBox;
   const padding=Math.max(width,height)*.08;
-  return <svg viewBox={`${-padding} ${-padding} ${width+padding*2} ${height+padding*2}`} aria-hidden="true"><g transform={`translate(0 ${height}) scale(1 -1)`}><path d={outlinePathData(loops)} fill="#e6edf8" fillRule="evenodd"/>{loops.map((l,i)=><path key={i} d={outlinePathData([l])} fill="none" stroke={flags[i]?'#e25252':'#326de6'} strokeWidth="1.2" vectorEffect="non-scaling-stroke"/>)}</g></svg>;
+  return <svg viewBox={`${-padding} ${-padding} ${width+padding*2} ${height+padding*2}`} aria-hidden="true"><defs><MaterialPattern id={patternId} stock={stock} size={Math.max(width,height)*.39}/></defs><g transform={`translate(0 ${height}) scale(1 -1)`}><path d={outlinePathData(loops)} fill={srppTextureUrl(stock)?`url(#${patternId})`:'#e6edf8'} fillRule="evenodd"/>{loops.map((l,i)=><path key={i} d={outlinePathData([l])} fill="none" stroke={flags[i]?'#e25252':'#326de6'} strokeWidth="1.2" vectorEffect="non-scaling-stroke"/>)}</g></svg>;
 }
 export function PartList({disabled}:{disabled:boolean}) {
   const {parts,updatePart,removePart}=useJobStore();
