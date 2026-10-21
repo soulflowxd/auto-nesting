@@ -3,7 +3,7 @@ import {getAuthUserId} from '@convex-dev/auth/server';
 import {query,mutation,action,internalQuery,internalMutation,type QueryCtx,type MutationCtx,type ActionCtx} from './_generated/server';
 import {internal} from './_generated/api';
 import type {Doc,Id} from './_generated/dataModel';
-import {parseJob} from '../src/lib/job';
+import {parseJob,MAX_CLOUD_PROJECT_BYTES} from '../src/lib/job';
 
 async function requireUser(ctx:QueryCtx|MutationCtx|ActionCtx) {
   const id=await getAuthUserId(ctx);
@@ -33,7 +33,7 @@ export const record=internalMutation({args:{storageId:v.id('_storage'),name:v.st
 export const saveCopy=action({args:{json:v.string()},returns:v.id('projects'),handler:async(ctx,{json}):Promise<Id<'projects'>>=>{
   await requireUser(ctx);
   let doc;
-  try {doc=parseJob(json);}catch(error){throw new ConvexError(error instanceof Error?error.message:'Invalid project.');}
+  try {doc=parseJob(json,MAX_CLOUD_PROJECT_BYTES);}catch(error){throw new ConvexError(error instanceof Error?error.message:'Invalid project.');}
   const canonical=JSON.stringify(doc);
   const storageId=await ctx.storage.store(new Blob([canonical],{type:'application/json'}));
   try {return await ctx.runMutation(internal.projects.record,{storageId,name:doc.name.trim()});}
