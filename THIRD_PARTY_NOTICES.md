@@ -8,7 +8,8 @@ Reference revision: 6100cdc2a44bb573b672ae8c5ecd6535d0dc90f8
 `src/lib/reference/` contains the geometry analysis, loop hierarchy, thickness
 helpers, contour nesting, DXF writer and their tests adapted from this project
 at the user's request. Original authorship remains with the upstream authors.
-Changes include configurable nesting options, a browser WASM asset override,
+Changes include automatic geometry-derived free rotation with adaptive
+continuous angular refinement, configurable nesting options, a browser WASM asset override,
 explicit DXF entity colors and extra STEP regression tests. The application
 export path preserves sampled contours without upstream simplification.
 

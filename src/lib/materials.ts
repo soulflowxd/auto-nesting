@@ -33,9 +33,27 @@ export const dimension = (inches: number) => `${number(inches)}″ (${number(inT
 export const thicknessLabel = (mm: number) => dimension(mmToIn(mm));
 export const stockLabel = (stock: StockPreset) => `${stock.material} · ${thicknessLabel(stock.thicknessMm)} · ${stock.color}`;
 
-export type SheetSettings = {widthIn: number; heightIn: number; gapIn: number; marginIn: number; rotation: 'fixed' | 'quarter' | 'fine'};
+export type SheetSettings = {
+  widthIn: number; heightIn: number; gapIn: number; marginIn: number;
+  rotation: 'fixed' | 'quarter' | 'fine' | 'free';
+};
 export function defaultSettings(stock: StockPreset): SheetSettings {
-  return {widthIn: mmToIn(stock.widthMm), heightIn: mmToIn(stock.heightMm), gapIn: 0.125, marginIn: 0.25, rotation: 'quarter'};
+  return {widthIn: mmToIn(stock.widthMm), heightIn: mmToIn(stock.heightMm), gapIn: 0.125, marginIn: 0.25, rotation: 'free'};
+}
+
+function rotationError(s: SheetSettings): string | null {
+  if (!['fixed', 'quarter', 'fine', 'free'].includes(s.rotation)) return 'Choose a supported rotation setting.';
+  return null;
+}
+
+export function rotationAngles(s: SheetSettings): number[] {
+  const error = rotationError(s);
+  if (error) throw new Error(error);
+  if (s.rotation === 'fixed') return [0];
+  // Free mode uses these only as initial seeds, then derives and refines angles
+  // against geometry and live sheet collisions inside the nesting engine.
+  const step = s.rotation === 'quarter' ? 90 : 30;
+  return Array.from({length: 360 / step}, (_, i) => i * step);
 }
 
 export function settingsErrors(s: SheetSettings): string[] {
@@ -44,6 +62,7 @@ export function settingsErrors(s: SheetSettings): string[] {
   if (s.widthIn <= 0 || s.heightIn <= 0 || s.widthIn > 240 || s.heightIn > 240) errors.push('Sheet dimensions must be greater than 0 and at most 240″ (6,096 mm).');
   if (s.gapIn < 0 || s.marginIn < 0 || s.gapIn > 12 || s.marginIn > 12) errors.push('Spacing and margin must be between 0″ (0 mm) and 12″ (304.8 mm).');
   if (s.marginIn * 2 >= Math.min(s.widthIn, s.heightIn)) errors.push('Edge margins leave no usable sheet area.');
-  if (!['fixed', 'quarter', 'fine'].includes(s.rotation)) errors.push('Choose a supported rotation setting.');
+  const angleError = rotationError(s);
+  if (angleError) errors.push(angleError);
   return errors;
 }

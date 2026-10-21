@@ -19,9 +19,11 @@
  * Several packing strategies are run and the best result kept, because none
  * of them wins on every set of parts, see STRATEGIES.
  *
- * It is still a planning aid, not the laser's nesting software: placement is
- * quantised to the grid and rotation to a fixed set of angles.
+ * Placement is quantised to the grid. Optional free rotation derives angles
+ * from geometry and adaptively refines them without a fixed angular increment.
  */
+
+import { freeRotationSeeds, refineFreeRotation } from './free-rotation';
 
 export type NestPoint = { x: number; y: number };
 
@@ -519,49 +521,39 @@ function packWith(
   // One part may appear many times; rasterising it once per rotation and
   // reusing that keeps the cost proportional to distinct parts, not units.
   const candidateCache = new Map<string, Candidate[]>();
-  function candidatesFor(part: NestPart): Candidate[] {
-    const cached = candidateCache.get(part.id);
-    if (cached) return cached;
-    const contoured = Boolean(part.outline?.length);
-    const base = contoured ? part.outline! : rectOutline(part.widthIn, part.heightIn);
-    const built: Candidate[] = [];
-    const seen = new Set<string>();
-    // A plain rectangle gains nothing from an off-axis angle, so it only ever
-    // gets the quarter turns even when the strategy offers more.
-    const rotations = contoured ? strategy.rotations : strategy.rotations.filter((deg) => deg % 90 === 0);
-    for (const rotationDeg of rotations) {
+  function candidateAt(part: NestPart, rotationDeg: number): Candidate {
+      const base = part.outline?.length ? part.outline : rectOutline(part.widthIn, part.heightIn);
       const outline = rotateOutline(base, rotationDeg);
       const { width, height } = outlineExtent(outline);
       // The footprint drives collision: everything inside the outer boundary
       // is consumed when the part is cut. The material raster is only needed
       // to work out which of those cells are cutouts.
       const footprint = rasterize([outerLoop(outline)], cell);
-      const material = rasterize(outline, cell, footprint);
       /*
        * Cutout space, eroded by the clearance gap so a part nested inside can
        * never come closer than GAP_IN to the cut path around it. Erosion is
        * dilation of the complement, done here by growing the material and
        * subtracting it.
        */
-      const grownMaterial = dilate(material, gapCells);
       const cutouts: Mask = { w: footprint.w, h: footprint.h, cells: new Uint8Array(footprint.cells.length) };
       let cutoutCells = 0;
-      for (let row = 0; row < footprint.h; row += 1) {
-        for (let col = 0; col < footprint.w; col += 1) {
-          const index = row * footprint.w + col;
-          const grown = grownMaterial.cells[(row + gapCells) * grownMaterial.w + (col + gapCells)];
-          if (footprint.cells[index] && !grown) {
-            cutouts.cells[index] = 1;
-            cutoutCells += 1;
+      // Team jobs prohibit nesting inside holes. Avoid rebuilding unused hole
+      // masks repeatedly when automatic free rotation is enabled.
+      if (options.allowInsideHoles) {
+        const material = rasterize(outline, cell, footprint);
+        const grownMaterial = dilate(material, gapCells);
+        for (let row = 0; row < footprint.h; row += 1) {
+          for (let col = 0; col < footprint.w; col += 1) {
+            const index = row * footprint.w + col;
+            const grown = grownMaterial.cells[(row + gapCells) * grownMaterial.w + (col + gapCells)];
+            if (footprint.cells[index] && !grown) {
+              cutouts.cells[index] = 1;
+              cutoutCells += 1;
+            }
           }
         }
       }
-      // A symmetric part rasterises identically at 0 and 180; skipping the
-      // duplicates keeps the search from repeating the same work.
-      const signature = `${footprint.w}x${footprint.h}:${footprint.cells.join("")}`;
-      if (seen.has(signature)) continue;
-      seen.add(signature);
-      built.push({
+      return {
         rotationDeg,
         outline,
         width,
@@ -571,7 +563,24 @@ function packWith(
         hasCutouts: options.allowInsideHoles && cutoutCells > 0,
         padded: toBitmask(dilate(footprint, gapCells)),
         padding: gapCells,
-      });
+      };
+  }
+  function candidatesFor(part: NestPart): Candidate[] {
+    const cached = candidateCache.get(part.id);
+    if (cached) return cached;
+    const base = part.outline?.length ? part.outline : rectOutline(part.widthIn, part.heightIn);
+    const rotations = options.freeRotation
+      ? freeRotationSeeds(base, fresh.widthIn - 2 * (options.marginIn + options.gapIn), fresh.heightIn - 2 * (options.marginIn + options.gapIn))
+      : part.outline?.length ? strategy.rotations : strategy.rotations.filter(deg => deg % 90 === 0);
+    const built: Candidate[] = [];
+    const seen = new Set<string>();
+    for (const rotationDeg of rotations) {
+      const candidate = candidateAt(part, rotationDeg);
+      const mask = candidate.footprint;
+      const signature = `${mask.w}x${mask.h}:${mask.bits.join(',')}`;
+      if (seen.has(signature)) continue;
+      seen.add(signature);
+      built.push(candidate);
     }
     candidateCache.set(part.id, built);
     return built;
@@ -613,7 +622,10 @@ function packWith(
       }
       const sheet = sheets[sheetIndex];
 
-      let best: { candidate: Candidate; col: number; row: number; cost: number } | null = null;
+      type CandidateFit = { candidate: Candidate; col: number; row: number; cost: number };
+      const spread = (fit: CandidateFit) => ((fit.col + fit.candidate.padding) * cell + fit.candidate.width) * ((fit.row + fit.candidate.padding) * cell + fit.candidate.height);
+      const betterFit = (a: CandidateFit, b: CandidateFit) => a.cost < b.cost || (a.cost === b.cost && spread(a) < spread(b) - 1e-12);
+      let best: CandidateFit | null = null;
       for (let index = 0; index < candidates.length; index += 1) {
         const candidate = candidates[index];
         const key = `${sheetIndex}:${unit.id}:${index}`;
@@ -627,9 +639,23 @@ function packWith(
         if (strategy.resumable) memo.set(key, spot.cost);
         // The strategy's own cost decides between orientations too, so a turn
         // that lets the part sit better wins on the same terms.
-        if (!best || spot.cost < best.cost) best = { candidate, ...spot };
+        const fit = { candidate, ...spot };
+        if (!best || (options.freeRotation ? betterFit(fit, best) : spot.cost < best.cost)) best = fit;
       }
       if (!best) continue;
+
+      if (options.freeRotation) {
+        const refined = refineFreeRotation(best, fit => fit.candidate.rotationDeg, angle => {
+          const candidate = candidateAt(unit, angle);
+          const spot = strategy.find(sheet, candidate.padded, 0);
+          return spot ? {candidate, ...spot} : null;
+        }, betterFit);
+        if (refined !== best) {
+          best = refined;
+          // Reuse successful unrestricted orientations for later copies.
+          if (!candidates.some(c => Math.abs(c.rotationDeg - refined.candidate.rotationDeg) < 1e-8)) candidates.push(refined.candidate);
+        }
+      }
 
       // The spot was found for the padded mask, whose origin sits `padding`
       // cells outside the part itself.
@@ -709,7 +735,7 @@ function isBetter(score: number[], incumbent: number[]) {
  * into a full sheet, which is what keeps a rack from filling with remnants.
  * Once inventory runs out, fresh sheets are opened without limit.
  */
-export type NestOptions = { marginIn: number; gapIn: number; rotations?: number[]; allowInsideHoles: boolean };
+export type NestOptions = { marginIn: number; gapIn: number; rotations?: number[]; allowInsideHoles: boolean; freeRotation?: boolean };
 export function nestOntoStock(parts: NestPart[], stock: NestStock[], fresh: NestStock, overrides: Partial<NestOptions> = {}): NestResult {
   const options: NestOptions = {marginIn: MARGIN_IN, gapIn: GAP_IN, allowInsideHoles: true, ...overrides};
   const largestEdge = Math.max(
@@ -794,7 +820,9 @@ function bestPack(units: NestPart[], cell: number, stock: NestStock[], fresh: Ne
   let bestScore: number[] | null = null;
   // A long queue is already slow to pack once; trying every strategy on it
   // would put seconds onto the page render for a marginal density gain.
-  const strategies = units.length > MULTI_STRATEGY_LIMIT ? STRATEGIES.slice(0, 1) : STRATEGIES;
+  // With explicit angles, the third strategy repeats the first exactly: its
+  // only difference was its angle list. Don't repeat a costly fine-angle run.
+  const strategies = units.length > MULTI_STRATEGY_LIMIT ? STRATEGIES.slice(0, 1) : options.rotations ? STRATEGIES.slice(0, 2) : STRATEGIES;
   for (const strategy of strategies) {
     const result = packWith({...strategy, rotations: options.rotations ?? strategy.rotations}, units, cell, stock, fresh, gapCells, options);
     const score = nestScore(result);

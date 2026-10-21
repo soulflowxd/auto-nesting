@@ -1,4 +1,4 @@
-import { defaultSettings, getStock, settingsErrors, type SheetSettings } from './materials';
+import { defaultSettings, getStock, rotationAngles, settingsErrors, type SheetSettings } from './materials';
 import { parseJob, type GroupResult, type JobPart } from './job';
 import { nestParts } from './reference/nesting';
 import { outlineFromAnalysis } from './reference/nest-outline';
@@ -17,8 +17,8 @@ export function nestJob(parts: JobPart[], settings: Record<string, SheetSettings
       if(errors.length) throw new Error(`${p.name}: ${errors.join(' ')}`);
       return {id:p.id,label:p.name,widthIn:p.analysis.boundingBox.width,heightIn:p.analysis.boundingBox.height,quantity:p.quantity,outline};
     });
-    const rotations=s.rotation==='fixed'?[0]:s.rotation==='quarter'?[0,90,180,270]:Array.from({length:12},(_,i)=>i*30);
-    const nest=nestParts(input,s.widthIn,s.heightIn,{marginIn:s.marginIn,gapIn:s.gapIn,rotations,allowInsideHoles:false});
+    const rotations=rotationAngles(s);
+    const nest=nestParts(input,s.widthIn,s.heightIn,{marginIn:s.marginIn,gapIn:s.gapIn,rotations,allowInsideHoles:false,freeRotation:s.rotation==='free'});
     const sheetErrors:Record<number,string[]>={};
     for(let i=0;i<nest.sheetsUsed;i++) sheetErrors[i]=validateSheet(nest.placements.filter(p=>p.sheetIndex===i),s);
     return {stockId,settings:s,nest,errors:sheetErrors};

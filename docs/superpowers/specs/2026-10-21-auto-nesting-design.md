@@ -155,8 +155,14 @@ boundaries. Export DXF in inches by default with declared units matching its
 coordinates. Curve
 flattening tolerance must be documented and consistent between preview/export.
 
-The reference nester uses contour rasterization with discrete rotations; it is
-a heuristic and does not promise a globally optimal arrangement. Preserve
+The reference nester uses contour rasterization. Per the user's correction,
+free rotation is now the default: the optimizer automatically derives arbitrary
+angles from part geometry and sheet-fit objectives, then adaptively refines
+orientations using the live sheet's placement/collision score. There are no
+user-entered angle or increment fields. Local angular search refines down to
+approximately 0.000001 degrees, while position remains grid-based. Constrained
+quarter-turn, 30-degree and fixed modes remain optional for directional stock.
+This is a heuristic and does not promise a globally optimal arrangement. Preserve
 conservative footprints and prohibit nesting inside another part's holes.
 Validate actual output for finite coordinates, sheet containment, overlap and
 configured clearance. A failed validation blocks the affected sheet's export

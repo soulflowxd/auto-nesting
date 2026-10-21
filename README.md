@@ -27,6 +27,17 @@ The active job is held in memory: save it before refreshing/closing the page.
 Changing a part, quantity or sheet setting invalidates its material group's
 layout. Run **Auto Nest** again before exporting that group.
 
+**Allowed rotations → Free rotation · automatic** lets the optimizer choose
+arbitrary floating-point angles. It derives orientations from the actual part
+geometry, searches for sheet-fit orientations, and adaptively refines angles
+against the current sheet's collision and packing score. There is no angle or
+increment to enter. The local refinement works down to approximately 0.000001°;
+this is numerical search precision, not a manufacturing accuracy guarantee.
+New jobs use free rotation by default. Quarter turns, 30° turns and locked
+orientation remain available for stock with direction constraints. Existing
+saved jobs retain their prior rotation rule. Changing the rule invalidates its
+layout and requires nesting again.
+
 ## Materials
 
 | Stock | Thickness, inches (mm) | Default sheet, inches (mm) |
@@ -63,8 +74,10 @@ separate sheets. Custom sheet dimensions support remnants.
 - One connected part per file. Crossing, touching and disconnected contours or
   islands are rejected with an import error. Interior holes are retained, but
   other parts are not placed into them.
-- The reused contour raster nester tries multiple strategies and discrete
-  rotations. It does not guarantee the mathematical optimum. Grid rounding can
+- The reused contour raster nester tries multiple placement strategies. Free
+  rotation uses geometry-derived seeds and adaptive continuous angular
+  refinement; constrained modes use their specified angles. It does not
+  guarantee the mathematical optimum. Grid rounding can
   leave more space than requested; spacing is a minimum. Oversized parts are
   reported rather than silently dropped. Each sheet is geometrically checked
   for containment, intersections and clearance before export.
