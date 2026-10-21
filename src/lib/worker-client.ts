@@ -2,7 +2,7 @@ import type { GeometryAnalysis, UnitOverride } from './reference/geometry/types'
 import type { GroupResult, JobPart } from './job';
 import type { SheetSettings } from './materials';
 
-function runWorker<T>(worker: Worker, message: unknown, signal?: AbortSignal, transfer: Transferable[]=[]): Promise<T> {
+function runWorker<T>(worker: Worker, message: unknown, signal?: AbortSignal, transfer: Transferable[]=[], label='CAD'): Promise<T> {
   return new Promise((resolve,reject)=>{
     const end=()=>{clearTimeout(timer);signal?.removeEventListener('abort',cancel);worker.terminate();};
     const cancel=()=>{end();reject(new Error('Operation cancelled.'));};
@@ -10,7 +10,7 @@ function runWorker<T>(worker: Worker, message: unknown, signal?: AbortSignal, tr
     signal?.addEventListener('abort',cancel,{once:true});
     if(signal?.aborted) {cancel();return;}
     worker.onmessage=e=>{end();if(e.data.error) reject(new Error(e.data.error));else resolve(e.data.result as T);};
-    worker.onerror=e=>{end();reject(new Error(e.message || 'CAD worker failed to start. Reload and try again.'));};
+    worker.onerror=e=>{end();reject(new Error(e.message || `${label} worker could not load. Save your job, reload the page, then open the saved job and try again.`));};
     worker.postMessage(message,transfer);
   });
 }
@@ -23,5 +23,5 @@ export async function importCad(file: File, unit: UnitOverride, signal?: AbortSi
   return runWorker(new Worker(new URL('../workers/cad.worker.ts',import.meta.url),{type:'module'}),{bytes,filename:file.name,unit},signal,[bytes]);
 }
 export function runNest(parts: JobPart[],settings: Record<string,SheetSettings>,signal?:AbortSignal):Promise<GroupResult[]> {
-  return runWorker(new Worker(new URL('../workers/nest.worker.ts',import.meta.url),{type:'module'}),{parts,settings},signal);
+  return runWorker(new Worker(new URL('../workers/nest.worker.ts',import.meta.url),{type:'module'}),{parts,settings},signal,[],'Nesting');
 }
