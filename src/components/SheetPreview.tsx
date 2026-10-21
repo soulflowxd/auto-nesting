@@ -8,7 +8,7 @@ import { outlinePathData, outlineTransform, placementCentre } from '../lib/refer
 import { polygonArea } from '../lib/validate-sheet';
 import { downloadFile, exportSheet } from '../lib/export-sheet';
 
-export function SheetPreview({group,settings,hasParts,busy,onError,index,onIndexChange}:{group?:GroupResult;settings:SheetSettings;hasParts:boolean;busy:boolean;onError:(e:string)=>void;index:number;onIndexChange:(index:number)=>void}) {
+export function SheetPreview({group,settings,hasParts,busy,onError,index,onIndexChange,projectName}:{group?:GroupResult;settings:SheetSettings;hasParts:boolean;busy:boolean;onError:(e:string)=>void;index:number;onIndexChange:(index:number)=>void;projectName:string}) {
   const patternId=`sheet-material-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
   const [zoom,setZoom]=useState(1);
   const [selected,setSelected]=useState<number|null>(null);
@@ -23,7 +23,7 @@ export function SheetPreview({group,settings,hasParts,busy,onError,index,onIndex
   const sheets=group?.nest.sheetsUsed??0;
   const exportCurrent=()=>{
     if(!group)return;
-    try {const file=exportSheet(group,currentIndex);downloadFile(file.filename,file.dxf);}
+    try {const file=exportSheet(group,currentIndex,projectName);downloadFile(file.filename,file.dxf);}
     catch(e){onError(e instanceof Error?e.message:'Export failed.');}
   };
   const w=settings.widthIn>0?settings.widthIn:27.5591,h=settings.heightIn>0?settings.heightIn:27.5591;

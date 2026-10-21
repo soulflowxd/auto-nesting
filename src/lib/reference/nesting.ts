@@ -128,7 +128,7 @@ function rectOutline(widthIn: number, heightIn: number): NestOutline {
   ]];
 }
 
-function rotateOutline(outline: NestOutline, degrees: number): NestOutline {
+export function rotateOutline(outline: NestOutline, degrees: number): NestOutline {
   if (degrees === 0) return outline;
   const radians = (degrees * Math.PI) / 180;
   // Snap the quarter turns so an axis-aligned part stays exactly axis-aligned

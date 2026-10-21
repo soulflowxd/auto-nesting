@@ -8,3 +8,27 @@
 @media(max-width:700px){.app-header{height:62px;padding:0 16px}.brand{font-size:21px}.header-actions{gap:4px}.local-status{display:none}.cloud-trigger span{display:none}.cloud-trigger{border:0;padding:6px}.job-toolbar{padding:12px 16px;gap:10px;flex-wrap:wrap}.job-name-wrap{width:100%}.job-name{flex:1;width:auto;font-size:14px}.job-actions{justify-content:space-between;width:100%;gap:8px}.job-actions .text-button{font-size:10px}.job-actions .primary-button{margin-left:auto}.workspace-grid{display:flex;flex-direction:column}.parts-sidebar{border-right:0}.import-panel{padding:23px 20px}.stock-selector{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}.stock-selector>.field-hint{grid-column:1/-1}.drop-zone{min-height:110px}.inline-select{justify-content:flex-start;gap:15px}.checkbox-label{font-size:11px}.parts-panel{padding:20px}.parts-empty{padding:18px}.parts-list{display:grid;grid-template-columns:1fr 1fr;gap:15px}.part-card{border:1px solid var(--line);border-radius:7px;padding:12px}.part-card:last-child{border:1px solid var(--line)}.part-thumb{width:42px;height:42px}.part-info p{font-size:8px}.part-info h3{font-size:10px}.part-overview{gap:7px}.preview-panel{padding:25px 16px}.preview-heading{margin-bottom:20px}.preview-heading h1{font-size:23px}.sheet-viewport{min-height:390px}.preview-empty{min-height:390px}.stock-panel{display:flex;flex-direction:column}.stock-panel .panel-section{padding:23px 20px;border-right:0}.stock-panel .dimension-pair{max-width:100%;gap:15px}.stock-summary{margin:16px 0}.stock-vendor{writing-mode:horizontal-tb;letter-spacing:1.5px;font-size:8px}.stock-footer{padding:18px 20px}.dimension-field input{min-height:40px}.stock-panel label{font-size:12px}.preview-footer{font-size:9px}.nest-summary{grid-template-columns:1fr 1.3fr 1fr;gap:15px}.nest-summary>div>span{font-size:7px}.nest-summary strong{font-size:25px}.export-button{grid-column:1/-1;min-height:45px}.export-button span{flex-direction:row;align-items:center;gap:10px}.app-footer{padding:12px 16px}.modal-backdrop{padding:16px}.modal{padding:22px}.sheet-tabs button{min-height:30px}.zoom-controls button{height:32px;width:25px}.icon-button{min-height:32px;min-width:30px}}
 @media(max-width:420px){.stock-selector{display:flex}.parts-list{grid-template-columns:1fr}.part-thumb{width:53px;height:53px}.part-info h3{font-size:12px}.part-info p{font-size:10px}.result-status{font-size:8px}.empty-sheet-size{font-size:8px}.job-actions{gap:6px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* Keep the whole sheet visible while long part queues scroll independently. */
+@media(min-width:701px){
+  .app-shell{height:100dvh;min-height:0;overflow:hidden}
+  .workspace-grid{min-height:0;overflow:hidden}
+  .parts-sidebar,.stock-panel{min-height:0;overflow-y:auto}
+  .preview-panel{min-height:0;padding:18px 24px}
+  .preview-heading{margin-bottom:14px;flex-shrink:0}
+  .sheet-toolbar,.preview-footer,.nest-summary,.selection-detail,.unplaced-banner,.error-message{flex-shrink:0}
+  .sheet-viewport{min-height:0;flex:1}
+  .preview-empty{min-height:0;width:100%}
+  .svg-scroll{height:100%;min-height:0;padding:10px}
+  .sheet-svg{min-height:0;max-height:none;height:100%;width:100%}
+  .preview-footer{padding:9px 0}
+  .nest-summary{padding-top:12px}
+}
+@media(min-width:701px) and (max-width:1020px){
+  .workspace-grid{grid-template-columns:230px minmax(0,1fr) 220px}
+  .stock-panel{grid-column:auto;display:block;border-left:1px solid var(--line);border-top:0}
+  .preview-panel{padding:16px 12px}
+  .preview-heading h1{font-size:20px}
+  .nest-summary{grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .nest-summary .export-button{grid-column:1/-1;min-height:32px}
+  .preview-footer{font-size:8px}
+}

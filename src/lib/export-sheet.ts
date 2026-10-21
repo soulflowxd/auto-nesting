@@ -4,7 +4,7 @@ import { validateSheet } from './validate-sheet';
 import { getStock, number } from './materials';
 import type { GroupResult } from './job';
 
-export function exportSheet(group: GroupResult, sheetIndex: number): {filename: string; dxf: string} {
+export function exportSheet(group: GroupResult, sheetIndex: number, projectName?:string): {filename: string; dxf: string} {
   const placements=group.nest.placements.filter(p=>p.sheetIndex===sheetIndex);
   if(!placements.length) throw new Error('This sheet has no parts to export.');
   const errors=validateSheet(placements,group.settings);
@@ -18,7 +18,8 @@ export function exportSheet(group: GroupResult, sheetIndex: number): {filename: 
   const dxf=writeDxf({polylines,layers,points:[{x:0,y:0},{x:widthIn,y:0},{x:widthIn,y:heightIn},{x:0,y:heightIn}].map(at=>({at,layer:'SHEET-DATUM'})),extents:{minX:0,minY:0,maxX:widthIn,maxY:heightIn}});
   const stock=getStock(group.stockId);
   const stem=`${stock.material}-${stock.color}-${number(stock.thicknessMm/25.4)}in-${stock.thicknessMm}mm-sheet-${sheetIndex+1}`.replace(/[^a-zA-Z0-9._-]+/g,'-');
-  return {filename:`${stem}.dxf`,dxf};
+  const projectStem=projectName?.trim().replace(/[<>:"/\\|?*]/g,'-').split('').map(c=>c.charCodeAt(0)<32?'-':c).join('').replace(/[. ]+$/,'')||'Untitled job';
+  return {filename:projectName?`${projectStem}${group.nest.sheetsUsed>1?`-sheet-${sheetIndex+1}`:''}.dxf`:`${stem}.dxf`,dxf};
 }
 
 export function downloadFile(filename: string, content: string, type='application/dxf') {

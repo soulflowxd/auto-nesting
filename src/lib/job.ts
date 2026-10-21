@@ -4,7 +4,8 @@ import { getStock, settingsErrors, type SheetSettings } from './materials';
 
 export type JobPart = {id: string; name: string; stockId: string; quantity: number; analysis: GeometryAnalysis};
 export type GroupResult = {stockId: string; settings: SheetSettings; nest: NestResult; errors: Record<number, string[]>};
-export type JobDocument = {version: 1; name: string; parts: JobPart[]; settings: Record<string, SheetSettings>};
+export type SavedLayout = {stockId:string; placements:{partId:string;sheetIndex:number;x:number;y:number;rotationDeg:number}[]};
+export type JobDocument = {version: 1; name: string; parts: JobPart[]; settings: Record<string, SheetSettings>; layouts?:SavedLayout[]};
 export const MAX_PROJECT_BYTES = 20 * 1024 * 1024;
 
 export function parseJob(json: string): JobDocument {
@@ -34,6 +35,6 @@ export function parseJob(json: string): JobDocument {
     getStock(id);
     if (!s || settingsErrors(s).length) throw new Error('Invalid sheet settings in project.');
   }
-  // Results are always regenerated after opening; saved placement data is never trusted.
-  return {version: 1, name: doc.name, parts: doc.parts, settings: doc.settings};
+  if(doc.layouts!==undefined&&(!Array.isArray(doc.layouts)||doc.layouts.length>100))throw new Error('Invalid saved layout.');
+  return {version: 1, name: doc.name, parts: doc.parts, settings: doc.settings, ...(doc.layouts?{layouts:doc.layouts}:{})};
 }

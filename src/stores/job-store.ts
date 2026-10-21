@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { GroupResult, JobDocument, JobPart } from '../lib/job';
 import { defaultSettings, getStock, type SheetSettings } from '../lib/materials';
+import { restoreLayouts } from '../lib/saved-layout';
 
 type JobState = {
   name:string;parts:JobPart[];settings:Record<string,SheetSettings>;results:GroupResult[];revision:number;
@@ -26,10 +27,11 @@ export const useJobStore=create<JobState>((set)=>({
   removePart:id=>set(s=>({parts:s.parts.filter(p=>p.id!==id),results:s.results.filter(g=>g.stockId!==s.parts.find(p=>p.id===id)?.stockId),revision:s.revision+1})),
   updateSettings:(id,patch)=>set(s=>({settings:{...s.settings,[id]:{...(s.settings[id]??defaultSettings(getStock(id))),...patch}},results:s.results.filter(g=>g.stockId!==id),revision:s.revision+1})),
   setResults:(results,revision)=>set(s=>s.revision===revision?{results}:{}),
-  loadJob:job=>set(s=>({name:job.name,parts:job.parts,settings:ensureSettings(job.parts,job.settings),results:[],revision:s.revision+1})),
+  loadJob:job=>{const results=restoreLayouts(job);set(s=>({name:job.name,parts:job.parts,settings:ensureSettings(job.parts,job.settings),results,revision:s.revision+1}));},
   clear:()=>set(s=>({name:'Untitled job',parts:[],settings:{},results:[],revision:s.revision+1})),
 }));
 export function currentJob():JobDocument {
-  const {name,parts,settings}=useJobStore.getState();
-  return {version:1,name,parts,settings};
+  const {name,parts,settings,results}=useJobStore.getState();
+  const layouts=results.map(g=>({stockId:g.stockId,placements:g.nest.placements.map(({partId,sheetIndex,x,y,rotationDeg})=>({partId,sheetIndex,x,y,rotationDeg}))}));
+  return {version:1,name,parts,settings,layouts};
 }
