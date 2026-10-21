@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Boxes, ChevronRight, FolderOpen, Save, Play, LoaderCircle, X, RotateCcw, CircleHelp, Download } from 'lucide-react';
-import { ImportPanel } from './components/ImportPanel';
+import { ImportPanel, type CadImportHandle } from './components/ImportPanel';
 import { PartList } from './components/PartList';
 import { StockPanel } from './components/StockPanel';
 import { SheetPreview } from './components/SheetPreview';
@@ -25,6 +25,7 @@ export default function App() {
   useDialogFocus(help||reset,closeDialogs);
   const controller=useRef<AbortController|null>(null);
   const open=useRef<HTMLInputElement>(null);
+  const cadImport=useRef<CadImportHandle>(null);
   const groups=[...new Set(parts.map(p=>p.stockId))];
   const stockId=groups.includes(active)?active:groups[0]??'srpp-3-black';
   const sheetSettings=settings[stockId]??defaultSettings(getStock(stockId));
@@ -61,17 +62,20 @@ export default function App() {
     onDropCapture={e=>{
       dragDepth.current=0;setDraggingFiles(false);
       const files=Array.from(e.dataTransfer.files);
-      if(!files.some(file=>/\.json$/i.test(file.name)))return;
       e.preventDefault();e.stopPropagation();
-      if(busy)return;
-      if(files.length!==1){setError('Drop one project JSON at a time.');return;}
-      void openFile(files[0]);
+      if(busy||!files.length)return;
+      if(files.some(file=>/\.json$/i.test(file.name))){
+        if(files.length!==1){setError('Drop one project JSON by itself, or drop STEP/DXF files together.');return;}
+        void openFile(files[0]);
+      }else if(files.every(file=>/\.(step|stp|dxf)$/i.test(file.name))){
+        setError('');void cadImport.current?.upload(files);
+      }else setError('Drop STEP, STP or DXF parts, or a project JSON.');
     }}>
-    {draggingFiles&&!busy&&<div className="project-drop-overlay" role="status"><FolderOpen size={32}/><strong>Drop a project JSON to open it</strong><span>Restores parts, sheet settings and saved nest · replaces the current job</span><small>Drop STEP or DXF files in the Import parts area</small></div>}
+    {draggingFiles&&!busy&&<div className="project-drop-overlay" role="status"><FolderOpen size={32}/><strong>Drop STEP, DXF or project JSON</strong><span>CAD files use the selected import material and thickness</span><small>A project JSON restores its saved nest and replaces the current job</small></div>}
     <header className="app-header"><a className="brand" href="/" aria-label="ITKAN Nest home"><span className="brand-mark"><Boxes size={23} strokeWidth={1.8}/></span><span>ITKAN<span className="brand-light"> Nest</span><small>ROBOTICS FABRICATION</small></span></a><div className="header-divider"/><span className="workspace-breadcrumb">Workspace<ChevronRight size={13}/><span>Sheet nesting</span></span><div className="header-actions"><span className="local-status"><span className="status-dot"/>Local workspace</span><button className="icon-button" title="How it works" aria-label="How it works" onClick={()=>setHelp(true)}><CircleHelp size={18}/></button></div></header>
     <div className="job-toolbar"><div className="job-name-wrap"><span className="job-name-icon"><FolderOpen size={18}/></span><input className="job-name" aria-label="Job name" value={name} maxLength={120} onChange={e=>setName(e.target.value)}/><span className="job-format">STEP + DXF</span></div><div className="job-actions"><input ref={open} type="file" accept=".json" className="sr-only" aria-label="Open saved job" disabled={!!busy} onChange={e=>void openFile(e.target.files?.[0])}/><button className="text-button" disabled={!!busy} title="Open a project JSON, or drag it anywhere onto the workspace" onClick={()=>open.current?.click()}><FolderOpen size={15}/><span>Open job</span></button><button className="text-button" disabled={!!busy||!parts.length||!name.trim()} onClick={()=>downloadFile(`${name.replace(/[^a-zA-Z0-9_-]/g,'-')}.nest.json`,JSON.stringify(currentJob()),'application/json')}><Save size={15}/><span>Save job</span></button><button className="icon-button" aria-label="Start new job" title="Start new job" disabled={!!busy||!parts.length} onClick={()=>setReset(true)}><RotateCcw size={15}/></button><span className="toolbar-divider"/><button className="secondary-button" disabled={!!busy||!canExport} title="Export the selected sheet as DXF" onClick={exportCurrentSheet}><Download size={15}/>Export DXF</button>{busy==='nest'?<button className="primary-button" onClick={()=>controller.current?.abort()}><X size={16}/>Cancel nesting</button>:<button className="primary-button" onClick={()=>void nest()} disabled={!!busy||!parts.length}><Play size={15} fill="currentColor"/>Auto Nest</button>}</div></div>
     {error&&<div className="global-error" role="alert"><span>{error}</span><button aria-label="Dismiss error" className="icon-button" onClick={()=>setError('')}><X size={16}/></button></div>}
-    <div className="workspace-grid"><aside className="parts-sidebar"><ImportPanel busy={!!busy} onActivity={isBusy=>setBusy(isBusy?'import':null)}/><PartList disabled={!!busy}/></aside><SheetPreview key={stockId} index={sheetIndex} onIndexChange={index=>setSheetIndices(s=>({...s,[stockId]:index}))} group={group} settings={sheetSettings} hasParts={parts.some(p=>p.stockId===stockId)} busy={busy==='nest'}/><StockPanel stockId={stockId} onSelect={setActive} disabled={!!busy}/></div>
+    <div className="workspace-grid"><aside className="parts-sidebar"><ImportPanel ref={cadImport} busy={!!busy} onActivity={isBusy=>setBusy(isBusy?'import':null)}/><PartList disabled={!!busy}/></aside><SheetPreview key={stockId} index={sheetIndex} onIndexChange={index=>setSheetIndices(s=>({...s,[stockId]:index}))} group={group} settings={sheetSettings} hasParts={parts.some(p=>p.stockId===stockId)} busy={busy==='nest'}/><StockPanel stockId={stockId} onSelect={setActive} disabled={!!busy}/></div>
     <footer className="app-footer"><span>Built for the parts that build your robot.</span><span>{busy?<><LoaderCircle size={12} className="spin"/>{busy==='import'?'Reading CAD geometry':'Calculating layout'}</>:<><span className="status-dot"/>Geometry processed on your device</>}</span><span>FTC / FRC</span></footer>
     {help&&<div className="modal-backdrop" onClick={()=>setHelp(false)}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e=>e.stopPropagation()}><div className="modal-heading"><h2 id="help-title">From CAD to a nested sheet</h2><button className="icon-button" aria-label="Close help" onClick={()=>setHelp(false)}><X size={18}/></button></div><ol className="help-steps"><li>Choose material, thickness and color. Upload one flat part per STEP or DXF file.</li><li>Set quantities and sheet dimensions. Every dimension shows inches and millimeters.</li><li>Auto Nest creates separate sheets for each material, color and thickness.</li><li>Export a DXF for each sheet. Blue contours use outward offsets; red holes use inward offsets in your CAM software.</li></ol><p className="field-hint">STEP supports uniform flat extrusions with through-holes. Bent parts, assemblies and disconnected profiles must be exported as separate flat parts. Nesting uses a contour grid with automatic free rotation.</p><p className="field-hint">Save job downloads an editable JSON project to your device. Open job restores it. Export DXF downloads the selected sheet for your cutting software. No files or jobs are stored on a server.</p><a href="/samples/bearing-plate.step" download className="text-button">Download sample STEP ↗</a></section></div>}
     {reset&&<div className="modal-backdrop"><section className="modal small-modal" role="dialog" aria-modal="true" aria-labelledby="reset-title"><h2 id="reset-title">Start a new job?</h2><p>Save the current job first if you want to keep it.</p><div className="modal-actions"><button className="secondary-button" onClick={()=>setReset(false)}>Keep editing</button><button className="primary-button" onClick={()=>{clear();setReset(false);setError('');}}>Start new job</button></div></section></div>}

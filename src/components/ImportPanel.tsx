@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { Upload, FileUp, FlaskConical, LoaderCircle, X, CircleAlert, Check } from 'lucide-react';
 import { StockSelector } from './StockSelector';
 import { importCad } from '../lib/worker-client';
@@ -7,7 +7,8 @@ import type { UnitOverride } from '../lib/reference/geometry/types';
 import { STOCKS, getStock } from '../lib/materials';
 
 type ImportStatus={name:string;error?:string;done?:boolean};
-export function ImportPanel({busy,onActivity}:{busy:boolean;onActivity:(value:boolean)=>void}) {
+export type CadImportHandle={upload:(files:File[])=>Promise<void>};
+export function ImportPanel({busy,onActivity,ref}:{busy:boolean;onActivity:(value:boolean)=>void;ref?:Ref<CadImportHandle>}) {
   const [stockId,setStockId]=useState('srpp-3-black');
   const [unit,setUnit]=useState<UnitOverride>('in');
   const [autoThickness,setAutoThickness]=useState(false);
@@ -16,6 +17,7 @@ export function ImportPanel({busy,onActivity}:{busy:boolean;onActivity:(value:bo
   const [drag,setDrag]=useState(false);
   const input=useRef<HTMLInputElement>(null);
   const controller=useRef<AbortController|null>(null);
+  useImperativeHandle(ref,()=>({upload}));
   async function upload(files:File[],sample=false) {
     if(busy||!files.length)return;
     const control=new AbortController();controller.current=control;
