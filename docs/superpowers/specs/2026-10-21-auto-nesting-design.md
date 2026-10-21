@@ -71,8 +71,8 @@ The acetal catalog uses the name Acetal (POM); white color and Delrin branding
 are the user's requested stock description, not independently verified vendor
 claims. The comparison table calls this stock 3 mm while SWYFT's sheet kit
 calls it 1/8 inch. Keep the user's requested 3 mm preset, label it nominal, and
-allow the measured stock thickness to be recorded explicitly without treating
-3 mm and 3.175 mm as equivalent.
+preserve measured STEP thickness separately without treating 3 mm and
+3.175 mm as equivalent. Stock choices remain the requested catalog presets.
 
 Offer black/white SRPP color selection as listed by SWYFT; color is part of the
 stock identity, so different colors never share a sheet. Default SRPP to black
@@ -102,10 +102,15 @@ affected result. Export remains unavailable until that group is nested again.
 
 ## Architecture and reuse
 
-Use a small TypeScript React web client and local Node server, with a single
-documented development command. Geometry import runs on the local server;
-nesting runs in a worker so computation does not freeze the interface.
-The first version keeps the active job in browser memory.
+Match the user's `soulflowxd/2026-scouting` stack: React, TypeScript, Vite,
+Tailwind CSS, lucide-react, Zustand and Convex. Convex provides authenticated
+project persistence and file storage, with Convex Auth password sign-in.
+Geometry import and nesting run in browser workers so computation does not
+freeze the interface or depend on a separate geometry server. This supersedes
+the earlier local Node geometry-server choice, per the user's stack request.
+The active job works locally without credentials; saving/reopening cloud
+projects requires configuration of a separate Convex deployment. Never reuse
+the scouting application's credentials or modify its deployment.
 
 Adapt the geometry analysis, contour nesting and DXF writing modules from
 INTERNAL_SOURCE, inspected at commit
