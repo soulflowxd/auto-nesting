@@ -163,6 +163,30 @@ lives on a separate layer using non-cutting point markers, following the
 reference exporter. Part spacing is not cutter compensation; machine toolpaths
 and kerf offsets remain settings in the team's cutting software.
 
+### Kerf direction colors and layers
+
+The user requires exported contours needing opposite kerf offset directions
+to have different colors. Classify closed loops by containment depth, not by
+their winding direction: outer boundaries and even-depth material islands
+need an outward offset; holes and other odd-depth internal cutouts need an
+inward offset. This must also work for reversed loop winding and nested loops.
+
+Export outside boundaries on `CUT-OUTSIDE` using explicit AutoCAD Color Index
+5 (blue), and internal cutouts on `CUT-HOLES` using explicit AutoCAD Color Index
+1 (red). Set matching layer colors and entity color indices so the distinction
+survives import into cutting software that groups by layer or by entity color.
+Datum points remain on `SHEET-DATUM` in gray (ACI 8), separate from cut geometry.
+Use the same cut-edge colors in the sheet preview and include a visible legend:
+`Blue: outside / outward offset` and `Red: holes / inward offset`. Part selection
+and stock-group highlighting must preserve this cut-edge distinction.
+
+The conventional signed-offset interpretation is positive for outside contours
+and negative for holes, but the sign varies by CAM software and contour
+convention. Label the exported layers by physical direction rather than relying
+only on plus/minus signs. Export nominal geometry; colors and layers identify
+which offset to apply in CAM, and must not imply that the DXF itself stores or
+applies a machine-specific kerf compensation setting.
+
 ## Interface
 
 A focused workspace with the import/parts panel on the left, a large sheet
@@ -187,6 +211,11 @@ narrow screens without hiding required inputs.
 - Check that changed import assignments/settings invalidate stale results.
 - Reparse exported DXFs to verify units, transformed bounds, holes and complete
   quantities; validate collision/clearance and sheet containment.
+- Verify outer boundaries export blue on `CUT-OUTSIDE`, holes export red on
+  `CUT-HOLES`, and datum points remain gray on their own layer. Test containment
+  classification with reversed winding and nested material islands, and assert
+  both entity and layer colors survive DXF export/reparse. Verify nominal
+  contour dimensions remain unchanged by the kerf classification.
 - Run TypeScript checks, core tests and a production build, then exercise the
   complete upload, material assignment, nesting and download flow in a browser.
 
