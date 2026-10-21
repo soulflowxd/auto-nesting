@@ -19,8 +19,8 @@ nesting, local project save/open and DXF export work without accounts, API keys
 or a backend connection. Choose **Try a sample job** for two DXF designs, or
 upload `public/samples/bearing-plate.step` to test a plate with a through-hole.
 The first STEP import loads an approximately 23 MB CAD kernel; DXF imports do
-not load it. Files are processed in browser workers and are not sent to Convex
-unless you explicitly save a cloud project.
+not load it. Files are processed in browser workers and stay on your device. No backend
+storage or sign-in is used.
 
 **Save job** downloads a `.nest.json` project that can be reopened and edited.
 The active job is held in memory: save it before refreshing/closing the page.
@@ -91,40 +91,11 @@ separate sheets. Custom sheet dimensions support remnants.
   loops per part. Computations may be cancelled; a three-minute timeout stops
   unusually expensive jobs.
 
-## Convex backend
+## Local data
 
-Uses React, TypeScript, Vite, Tailwind, Zustand, Lucide, Convex and Convex Auth
-following [2026-scouting](https://github.com/soulflowxd/2026-scouting). Backend
-source is in `convex/`. It is ready to connect but **no cloud deployment is
-configured by this checkout**. The local workspace continues working without it.
-
-1. In a terminal, run `bun run convex:dev`. Sign in and explicitly create/select
-   a **new ITKAN Nest project**, rather than selecting your scouting deployment.
-   Convex generates deployment bindings and writes `.env.local`.
-2. In another terminal, run:
-
-   ```powershell
-   bunx @convex-dev/auth --web-server-url http://127.0.0.1:5173
-   ```
-
-   This configures `SITE_URL`, `JWT_PRIVATE_KEY` and `JWKS` on the new backend.
-   Keep the existing password provider, schema and HTTP routes when prompted.
-3. Set `VITE_CONVEX_URL` in `.env.local` to that deployment's public `.convex.cloud`
-   URL. Restart `bun run dev`. Keep `bun run convex:dev` running during development.
-4. Open **Cloud projects**, create an account or sign in, and save a snapshot.
-
-Each cloud save creates a **new private snapshot**, stored as versioned project
-JSON in Convex file storage. Database records store the owner and snapshot
-metadata. Server-side authorization protects listing, opening and deleting;
-another user cannot access your snapshots. No public storage URLs are returned.
-Up to 50 snapshots per user, each up to 750 KB. Saved placement results are not
-trusted or restored: reopening loads parts/settings and requires nesting again.
-Original CAD files are not stored; the analyzed geometry is in the snapshot.
-Use local project downloads for offline work or larger projects.
-
-The scouting app's Convex Auth endpoint compatibility patch is retained as an
-idempotent `postinstall` script. Secrets belong only in deployment environment
-variables. No scouting credentials are included or reused.
+Jobs stay in browser memory. Save job downloads JSON to your device; Open job
+restores it (up to 20 MB). Export DXF downloads the selected sheet. Save before
+refreshing or closing the page. No account or backend is used.
 
 ## Verification
 
@@ -138,8 +109,7 @@ bun run preview
 
 Tests cover inherited STEP/DXF geometry, kerf layers/colors, unit conversions,
 stock grouping, quantities, rotations, collisions/spacing, stale results and
-Convex project authorization/storage. Backend tests use `convex-test` and need
-no cloud deployment. `bun run samples` regenerates sample CAD files.
+local project round trips. `bun run samples` regenerates sample CAD files.
 
 To inspect an exported DXF independently:
 
@@ -147,10 +117,7 @@ To inspect an exported DXF independently:
 bun scripts/verify-export.ts "C:\path\to\sheet.dxf"
 ```
 
-The Vercel config builds the static Vite frontend. To deploy with cloud saving,
-configure and deploy the separate Convex backend first, set `SITE_URL` to the
-frontend origin, and set `VITE_CONVEX_URL` in Vercel before building. Live cloud
-sign-in and persistence must be smoke-tested after connecting that deployment.
+The Vercel config builds a static Vite site. No backend configuration is needed.
 
 ## Provenance
 

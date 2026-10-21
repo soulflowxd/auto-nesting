@@ -6,10 +6,9 @@ export type JobPart = {id: string; name: string; stockId: string; quantity: numb
 export type GroupResult = {stockId: string; settings: SheetSettings; nest: NestResult; errors: Record<number, string[]>};
 export type JobDocument = {version: 1; name: string; parts: JobPart[]; settings: Record<string, SheetSettings>};
 export const MAX_PROJECT_BYTES = 20 * 1024 * 1024;
-export const MAX_CLOUD_PROJECT_BYTES = 750 * 1024;
 
-export function parseJob(json: string, maxBytes=MAX_PROJECT_BYTES): JobDocument {
-  if (new TextEncoder().encode(json).length > maxBytes) throw new Error(maxBytes===MAX_CLOUD_PROJECT_BYTES?'Cloud projects are limited to 750 KB. Use Save job and Open job for larger local projects.':'Project exceeds the 20 MB limit. Split it into smaller jobs.');
+export function parseJob(json: string): JobDocument {
+  if (new TextEncoder().encode(json).length > MAX_PROJECT_BYTES) throw new Error('Project exceeds the 20 MB limit. Split it into smaller jobs.');
   const doc = JSON.parse(json) as JobDocument;
   if (!doc || doc.version !== 1 || typeof doc.name !== 'string' || !doc.name.trim() || doc.name.length > 120 || !Array.isArray(doc.parts) || doc.parts.length > 100 || !doc.settings || Array.isArray(doc.settings) || typeof doc.settings !== 'object') throw new Error('This is not a supported ITKAN Nest project.');
   const ids = new Set<string>();

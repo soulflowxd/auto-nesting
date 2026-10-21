@@ -10,15 +10,10 @@
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview --host 127.0.0.1",
-    "convex:dev": "convex dev",
-    "postinstall": "node scripts/patch-convex-auth.mjs",
     "samples": "tsx scripts/generate-samples.ts"
   },
   "dependencies": {
-    "@auth/core": "^0.41.1",
-    "@convex-dev/auth": "^0.0.94",
     "@fontsource-variable/geist": "^5.2.9",
-    "convex": "^1.41.0",
     "dxf-parser": "^1.1.2",
     "lucide-react": "^1.21.0",
     "react": "^19.2.6",
@@ -34,7 +29,6 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "convex-test": "^0.0.53",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
