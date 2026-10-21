@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "team-nest",
+      "name": "itkan-nest",
       "dependencies": {
         "@auth/core": "^0.41.1",
         "@convex-dev/auth": "^0.0.94",
