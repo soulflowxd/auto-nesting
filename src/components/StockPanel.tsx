@@ -3,11 +3,13 @@ import { useJobStore } from '../stores/job-store';
 import { defaultSettings, dimension, getStock, inToMm, number, settingsErrors, srppTextureUrl, thicknessLabel, type SheetSettings } from '../lib/materials';
 import { useState } from 'react';
 
-function DimensionField({label,value,onChange,disabled}:{label:string;value:number;onChange:(n:number)=>void;disabled:boolean}) {
+function DimensionField({label,value,onChange,disabled,unit='in'}:{label:string;value:number;onChange:(n:number)=>void;disabled:boolean;unit?:'in'|'mm'}) {
   const [editing,setEditing]=useState<string|null>(null);
-  return <label className="dimension-field">{label}<div className="input-unit"><input aria-label={label} inputMode="decimal" type="number" step="any" min="0" value={editing??String(Number(value.toFixed(4)))} disabled={disabled} onFocus={()=>setEditing(String(Number(value.toFixed(6))))} onChange={e=>{setEditing(e.target.value);onChange(Number(e.target.value));}} onBlur={()=>setEditing(null)}/><span>in</span></div><span className="field-hint">{number(inToMm(value),3)} mm</span></label>;
+  const shown=unit==='mm'?inToMm(value):value;
+  return <label className="dimension-field">{label}<div className="input-unit"><input key={unit} aria-label={label} inputMode="decimal" type="number" step="any" min="0" value={editing??String(Number(shown.toFixed(unit==='mm'?3:4)))} disabled={disabled} onFocus={()=>setEditing(String(Number(shown.toFixed(6))))} onChange={e=>{setEditing(e.target.value);onChange(unit==='mm'?Number(e.target.value)/25.4:Number(e.target.value));}} onBlur={()=>setEditing(null)}/><span>{unit}</span></div><span className="field-hint">{unit==='mm'?`${number(value,4)} in`:`${number(inToMm(value),3)} mm`}</span></label>;
 }
 export function StockPanel({stockId,onSelect,disabled}:{stockId:string;onSelect:(id:string)=>void;disabled:boolean}) {
+  const [placementUnit,setPlacementUnit]=useState<'in'|'mm'>('in');
   const {parts,settings,updateSettings}=useJobStore();
   const groups=[...new Set(parts.map(p=>p.stockId))];
   if(!groups.length)return <aside className="stock-panel"><div className="panel-section"><div className="section-heading"><span className="section-icon"><Ruler size={16}/></span><h2>Sheet setup</h2><span className="step-number">02</span></div><p className="section-description">Upload a part and choose its material and thickness to set up a sheet.</p></div></aside>;
@@ -25,7 +27,7 @@ export function StockPanel({stockId,onSelect,disabled}:{stockId:string;onSelect:
       <div className="field-pair dimension-pair"><DimensionField label="Sheet width" value={s.widthIn} onChange={widthIn=>update({widthIn})} disabled={disabled}/><DimensionField label="Sheet height" value={s.heightIn} onChange={heightIn=>update({heightIn})} disabled={disabled}/></div>
       <button className="text-button rotate-sheet" disabled={disabled} onClick={()=>update({widthIn:s.heightIn,heightIn:s.widthIn})}><RotateCw size={13}/>Swap width & height</button>
     </div>
-    <div className="panel-section"><h3 className="subheading"><MoveHorizontal size={15}/>Placement rules</h3><div className="field-pair dimension-pair"><DimensionField label="Part spacing" value={s.gapIn} onChange={gapIn=>update({gapIn})} disabled={disabled}/><DimensionField label="Edge margin" value={s.marginIn} onChange={marginIn=>update({marginIn})} disabled={disabled}/></div>
+    <div className="panel-section"><div className="placement-heading"><h3 className="subheading"><MoveHorizontal size={15}/>Placement rules</h3><div className="unit-switch" role="group" aria-label="Placement rule units"><button type="button" className={placementUnit==='in'?'active':''} aria-pressed={placementUnit==='in'} onClick={()=>setPlacementUnit('in')}>in</button><button type="button" className={placementUnit==='mm'?'active':''} aria-pressed={placementUnit==='mm'} onClick={()=>setPlacementUnit('mm')}>mm</button></div></div><div className="field-pair dimension-pair"><DimensionField label="Part spacing" value={s.gapIn} onChange={gapIn=>update({gapIn})} disabled={disabled} unit={placementUnit}/><DimensionField label="Edge margin" value={s.marginIn} onChange={marginIn=>update({marginIn})} disabled={disabled} unit={placementUnit}/></div>
       <label>Rotation<span className="static-field">Free rotation · automatic</span></label>
       <p className="field-hint">The optimizer chooses and refines any angle automatically. No angle or increment to enter.</p>
       <p className="field-hint"><Scan size={13}/>Parts stay outside other parts’ holes.</p>

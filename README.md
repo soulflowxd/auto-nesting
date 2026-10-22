@@ -46,12 +46,12 @@ Each imported part waits for an explicit material, thickness and color choice.
 
 | Stock | Thickness, inches (mm) | Default sheet, inches (mm) |
 | --- | --- | --- |
-| 7075-T6 aluminum | 0.1181 (3), 0.2362 (6) | 27.5591 × 27.5591 (700 × 700) |
 | Solid SRPP, black | 0.0689 (1.75) | 25.9843 × 29.0157 (660 × 737) |
 | Solid SRPP, black/white | 0.1181 (3) | 24.0157 × 24.0157 (610 × 610) |
 | Foam-core SRPP, black/white | 0.2362 (6) | 24.0157 × 24.0157 (610 × 610) |
 | White Delrin / acetal | 0.1181 (3), nominal | 23.6220 × 23.6220 (600 × 600) |
-| Polycarbonate | 0.1181 (3), 0.2362 (6) | 29.3307 × 29.3307 (745 × 745) |
+
+Aluminum is temporarily unavailable for new parts, and polycarbonate is no longer offered. Existing saved jobs using either preset remain readable.
 
 These are stock presets, not live inventory. Sizes come from
 [SWYFT's sheet material comparison](https://swyftrobotics.com/tools/materials),

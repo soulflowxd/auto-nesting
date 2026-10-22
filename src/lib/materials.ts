@@ -14,6 +14,9 @@ export const STOCKS: StockPreset[] = [
   ...[3, 6].map(thicknessMm => ({id: `pc-${thicknessMm}`, material: 'Polycarbonate', color: 'Clear', thicknessMm, widthMm: 745, heightMm: 745})),
 ];
 
+/** Currently offered stock. Legacy presets remain in STOCKS so older jobs can still open. */
+export const AVAILABLE_STOCKS = STOCKS.filter(stock => stock.material.startsWith('SRPP') || stock.material === 'Delrin / acetal');
+
 export function getStock(id: string): StockPreset {
   const stock = STOCKS.find(stock => stock.id === id);
   if (!stock) throw new Error('Choose a supported material and thickness.');
@@ -38,7 +41,7 @@ export type SheetSettings = {
   rotation: 'fixed' | 'quarter' | 'fine' | 'free';
 };
 export function defaultSettings(stock: StockPreset): SheetSettings {
-  return {widthIn: mmToIn(stock.widthMm), heightIn: mmToIn(stock.heightMm), gapIn: 0.125, marginIn: 0.25, rotation: 'free'};
+  return {widthIn: mmToIn(stock.widthMm), heightIn: mmToIn(stock.heightMm), gapIn: mmToIn(1), marginIn: mmToIn(1), rotation: 'free'};
 }
 
 function rotationError(s: SheetSettings): string | null {
