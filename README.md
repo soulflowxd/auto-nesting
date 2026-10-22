@@ -22,7 +22,9 @@ The first STEP import loads an approximately 23 MB CAD kernel; DXF imports do
 not load it. Files are processed in browser workers and stay on your device. No backend
 storage or sign-in is used.
 
-**Save job** downloads a `.nest.json` project including the current nest.
+**Save job** downloads one `.nest.json` project containing every part, material
+group, and sheet in the current nest. **Export DXF** downloads only the sheet
+currently shown; select each sheet in turn to export its DXF.
 Drag a project JSON anywhere onto the workspace, or use Open job.
 Opening restores the layout immediately, with geometry and clearance checked.
 Older projects without layouts still open and can be nested again. DXF downloads

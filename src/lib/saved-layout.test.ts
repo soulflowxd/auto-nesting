@@ -22,3 +22,15 @@ it('validates saved transforms and still opens old projects without layouts',()=
   expect(useJobStore.getState().results).toEqual([]);
   expect(()=>useJobStore.getState().loadJob({...job,layouts:[{stockId:'al7075-3',placements:[{partId:'plate',sheetIndex:0,x:-10,y:0,rotationDeg:3.84731}]}]})).toThrow('Invalid saved layout');
 });
+
+it('saves every sheet in a multi-sheet project',()=>{
+  const store=()=>useJobStore.getState();store().clear();store().setName('Three sheets');
+  store().addParts([fixturePart({quantity:3})]);
+  store().updateSettings('al7075-3',{widthIn:3,heightIn:2,gapIn:.1,marginIn:.25});
+  store().setResults(nestJob(store().parts,store().settings),store().revision);
+  const saved=parseJob(JSON.stringify(currentJob()));
+  expect(saved.layouts?.[0].placements.map(p=>p.sheetIndex)).toEqual([0,1,2]);
+  store().clear();store().loadJob(saved);
+  expect(store().results[0].nest.sheetsUsed).toBe(3);
+  expect(exportSheet(store().results[0],2,store().name).dxf).toContain('CUT-OUTSIDE');
+});
