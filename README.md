@@ -38,14 +38,14 @@ against the current sheet's collision and packing score. There is no angle or
 increment to enter. The local refinement works down to approximately 0.000001°;
 this is numerical search precision, not a manufacturing accuracy guarantee.
 The workspace always uses free rotation, including when opening older projects.
-New imports default to black solid SRPP at 3 mm.
+Each imported part waits for an explicit material, thickness and color choice.
 
 ## Materials
 
 | Stock | Thickness, inches (mm) | Default sheet, inches (mm) |
 | --- | --- | --- |
 | 7075-T6 aluminum | 0.1181 (3), 0.2362 (6) | 27.5591 × 27.5591 (700 × 700) |
-| Solid SRPP, black/white | 0.0689 (1.75) | 25.9843 × 29.0157 (660 × 737) |
+| Solid SRPP, black | 0.0689 (1.75) | 25.9843 × 29.0157 (660 × 737) |
 | Solid SRPP, black/white | 0.1181 (3) | 24.0157 × 24.0157 (610 × 610) |
 | Foam-core SRPP, black/white | 0.2362 (6) | 24.0157 × 24.0157 (610 × 610) |
 | White Delrin / acetal | 0.1181 (3), nominal | 23.6220 × 23.6220 (600 × 600) |
@@ -86,8 +86,10 @@ separate sheets. Custom sheet dimensions support remnants.
 - Curves are tessellated: DXF arcs/circles at 2° steps, STEP circles at 90 samples
   per edge and other STEP curves at 128 samples. Chord error depends on curve
   size (a full 90-segment circle has about 0.061% radius chord deviation).
-  Export uses those same sampled loops without further simplification, with
-  coordinates to 0.000001″ (0.0000254 mm). Review large curved parts in CAM for
+  If a STEP file exceeds the 20,000-point limit, its contours are simplified
+  with a maximum additional deviation of 0.005″ (0.127 mm); the actual tolerance
+  is reported with the imported part. Export uses the resulting sampled loops,
+  with coordinates to 0.000001″ (0.0000254 mm). Review large curved parts in CAM for
   your required precision. Display rounding never changes stock dimensions.
 - Limits: 20 MB per input, 100 designs, 500 total copies, 20,000 points and 256
   loops per part. Computations may be cancelled; a three-minute timeout stops
@@ -120,6 +122,8 @@ bun scripts/verify-export.ts "C:\path\to\sheet.dxf"
 ```
 
 The Vercel config builds a static Vite site. No backend configuration is needed.
+`.env*` files are ignored by Git. Do not commit CAD jobs, credentials, or private
+team files to this public repository.
 
 ## Provenance
 
