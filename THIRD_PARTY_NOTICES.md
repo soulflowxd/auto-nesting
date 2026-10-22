@@ -18,6 +18,10 @@ same reference revision: `public/materials/srpp-decal.png` (black woven SRPP)
 and `public/materials/srpp-white.jpg` (white woven SRPP). They are used for
 swatches and preview fills only; DXF cut geometry and colors are unchanged.
 
+The header mark (`public/brand/itkan-mark-black.png`) and Alfa Slab One
+wordmark font (`public/fonts/AlfaSlabOne-Regular.ttf`) are also copied from
+that reference revision at the user's request.
+
 No repository-wide LICENSE or NOTICE file was present at the inspected revision.
 This attribution does not assert an open-source redistribution license for
 that code. Confirm the author's permission before publishing/distributing a
