@@ -5,3 +5,5 @@ dist/
 *.tsbuildinfo
 .superpowers/
 test-results/
+
+.vercel
