@@ -16,8 +16,8 @@ bun run dev
 
 Open the URL Vite prints (normally http://127.0.0.1:5173). Geometry import,
 nesting, local project save/open and DXF export work without accounts, API keys
-or a backend connection. Choose **Try a sample job** for two DXF designs, or
-upload `public/samples/bearing-plate.step` to test a plate with a through-hole.
+or a backend connection. Upload `public/samples/bearing-plate.step` to test a
+plate with a through-hole.
 The first STEP import loads an approximately 23 MB CAD kernel; DXF imports do
 not load it. Files are processed in browser workers and stay on your device. No backend
 storage or sign-in is used.
