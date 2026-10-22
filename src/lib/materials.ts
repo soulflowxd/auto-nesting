@@ -39,6 +39,8 @@ export const stockLabel = (stock: StockPreset) => `${stock.material} · ${thickn
 export type SheetSettings = {
   widthIn: number; heightIn: number; gapIn: number; marginIn: number;
   rotation: 'fixed' | 'quarter' | 'fine' | 'free';
+  /** Already-used rectangles on the first sheet, in inches from its lower-left corner. */
+  blockedAreas?: {x:number;y:number;width:number;height:number}[];
 };
 export function defaultSettings(stock: StockPreset): SheetSettings {
   return {widthIn: mmToIn(stock.widthMm), heightIn: mmToIn(stock.heightMm), gapIn: mmToIn(1), marginIn: mmToIn(1), rotation: 'free'};
@@ -65,6 +67,15 @@ export function settingsErrors(s: SheetSettings): string[] {
   if (s.widthIn <= 0 || s.heightIn <= 0 || s.widthIn > 240 || s.heightIn > 240) errors.push('Sheet dimensions must be greater than 0 and at most 240″ (6,096 mm).');
   if (s.gapIn < 0 || s.marginIn < 0 || s.gapIn > 12 || s.marginIn > 12) errors.push('Spacing and margin must be between 0″ (0 mm) and 12″ (304.8 mm).');
   if (s.marginIn * 2 >= Math.min(s.widthIn, s.heightIn)) errors.push('Edge margins leave no usable sheet area.');
+  if (s.blockedAreas !== undefined) {
+    if (!Array.isArray(s.blockedAreas) || s.blockedAreas.length > 32) errors.push('Use at most 32 marked used areas.');
+    else for (const area of s.blockedAreas) {
+      if (!area || ![area.x,area.y,area.width,area.height].every(Number.isFinite) || area.width <= 0 || area.height <= 0 || area.x < 0 || area.y < 0 || area.x + area.width > s.widthIn + 1e-8 || area.y + area.height > s.heightIn + 1e-8) {
+        errors.push('A marked used area must fit inside the sheet.');
+        break;
+      }
+    }
+  }
   const angleError = rotationError(s);
   if (angleError) errors.push(angleError);
   return errors;

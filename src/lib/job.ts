@@ -4,7 +4,7 @@ import { getStock, settingsErrors, type SheetSettings } from './materials';
 
 export type JobPart = {id: string; name: string; stockId: string; quantity: number; analysis: GeometryAnalysis};
 export type GroupResult = {stockId: string; settings: SheetSettings; nest: NestResult; errors: Record<number, string[]>};
-export type SavedLayout = {stockId:string; placements:{partId:string;sheetIndex:number;x:number;y:number;rotationDeg:number}[]};
+export type SavedLayout = {stockId:string; sheetsUsed?:number; placements:{partId:string;sheetIndex:number;x:number;y:number;rotationDeg:number}[]};
 export type JobDocument = {version: 1; name: string; parts: JobPart[]; settings: Record<string, SheetSettings>; layouts?:SavedLayout[]};
 export const MAX_PROJECT_BYTES = 20 * 1024 * 1024;
 

@@ -32,6 +32,6 @@ export const useJobStore=create<JobState>((set)=>({
 }));
 export function currentJob():JobDocument {
   const {name,parts,settings,results}=useJobStore.getState();
-  const layouts=results.map(g=>({stockId:g.stockId,placements:g.nest.placements.map(({partId,sheetIndex,x,y,rotationDeg})=>({partId,sheetIndex,x,y,rotationDeg}))}));
+  const layouts=results.map(g=>({stockId:g.stockId,sheetsUsed:g.nest.sheetsUsed,placements:g.nest.placements.map(({partId,sheetIndex,x,y,rotationDeg})=>({partId,sheetIndex,x,y,rotationDeg}))}));
   return {version:1,name,parts,settings,layouts};
 }

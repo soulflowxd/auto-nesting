@@ -7,7 +7,7 @@ import type { GroupResult } from './job';
 export function exportSheet(group: GroupResult, sheetIndex: number, projectName?:string): {filename: string; dxf: string} {
   const placements=group.nest.placements.filter(p=>p.sheetIndex===sheetIndex);
   if(!placements.length) throw new Error('This sheet has no parts to export.');
-  const errors=validateSheet(placements,group.settings);
+  const errors=validateSheet(placements,group.settings,sheetIndex);
   if(errors.length) throw new Error(`Export blocked: ${errors.join(' ')}`);
   const layers=[edgeLayer('CUT',false),edgeLayer('CUT',true),{name:'SHEET-DATUM',color:8}];
   const polylines=placements.flatMap(p=>{

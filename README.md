@@ -33,6 +33,14 @@ The active job is held in memory: save it before refreshing/closing the page.
 Changing a part, quantity or sheet setting invalidates its material group's
 layout. Run **Auto Nest** again before exporting that group.
 
+For a partly used sheet, choose **Mark used area** above the preview and drag
+rectangles over the material that is no longer available. You can mark multiple
+areas, undo the last one, or clear them. The marked areas apply to sheet 1 of
+the selected material group; additional sheets are fresh stock. Marked areas
+are saved in the project JSON and kept clear by the nester. Changing them
+invalidates the current layout, so run **Auto Nest** again. Used-area shading
+is a preview guide, not an extra DXF cut path.
+
 **Free rotation · automatic** lets the optimizer choose
 arbitrary floating-point angles. It derives orientations from the actual part
 geometry, searches for sheet-fit orientations, and adaptively refines angles

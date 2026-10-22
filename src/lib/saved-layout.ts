@@ -24,12 +24,14 @@ export function restoreLayouts(job:JobDocument):GroupResult[] {
       const outline=rotateOutline(base,p.rotationDeg);
       return {...p,label:part.name,sheetId:`restored-${p.sheetIndex}`,outline,width:Math.max(...outline.flat().map(v=>v.x)),height:Math.max(...outline.flat().map(v=>v.y))};
     });
-    const sheetsUsed=placements.length?Math.max(...placements.map(p=>p.sheetIndex))+1:0;
+    const minimumSheets=placements.length?Math.max(...placements.map(p=>p.sheetIndex))+1:0;
+    const sheetsUsed=layout.sheetsUsed??minimumSheets;
+    if(!Number.isInteger(sheetsUsed)||sheetsUsed<minimumSheets||sheetsUsed>500||sheetsUsed>minimumSheets+1)throw new Error('Invalid saved sheet count.');
     const errors:Record<number,string[]>={};
     for(let i=0;i<sheetsUsed;i++) {
       const sheet=placements.filter(p=>p.sheetIndex===i);
-      if(!sheet.length)throw new Error('Saved layout has a missing sheet.');
-      errors[i]=validateSheet(sheet,settings);
+      if(!sheet.length&&!(i===0&&settings.blockedAreas?.length))throw new Error('Saved layout has a missing sheet.');
+      errors[i]=validateSheet(sheet,settings,i);
       if(errors[i].length)throw new Error(`Invalid saved layout: ${errors[i].join(' ')}`);
     }
     const unplaced=parts.flatMap(p=>Array.from({length:p.quantity-(counts.get(p.id)??0)},()=>({id:p.id,label:p.name,widthIn:p.analysis.boundingBox.width,heightIn:p.analysis.boundingBox.height,quantity:1,outline:outlineFromAnalysis(p.analysis)})));

@@ -83,6 +83,8 @@ export type NestStock = {
    * the whole rectangle is usable, which is what fresh stock is.
    */
   usable?: NestOutline;
+  /** Already-used rectangles, measured from the sheet's lower-left corner. */
+  blocked?: {x:number;y:number;width:number;height:number}[];
 };
 
 export type NestResult = {
@@ -527,7 +529,16 @@ function packWith(
       hasCutouts: false,
       used: null,
     };
-    if (!spec.usable?.length || cols <= 0 || rows <= 0) return sheet;
+    if (cols <= 0 || rows <= 0) return sheet;
+
+    for (const area of spec.blocked??[]) {
+      const left = Math.max(0,Math.floor((area.x-options.marginIn)/cell));
+      const right = Math.min(cols,Math.ceil((area.x+area.width-options.marginIn)/cell));
+      const bottom = Math.max(0,Math.floor((area.y-options.marginIn)/cell));
+      const top = Math.min(rows,Math.ceil((area.y+area.height-options.marginIn)/cell));
+      for(let row=bottom;row<top;row++)for(let col=left;col<right;col++)sheet.grid.bits[row*words+(col>>5)]|=1<<(col&31);
+    }
+    if (!spec.usable?.length) return sheet;
 
     // The grid's (0,0) is MARGIN_IN into the sheet, so shift the region to match.
     const shifted = spec.usable.map((loop) => loop.map((point) => ({ x: point.x - options.marginIn, y: point.y - options.marginIn })));

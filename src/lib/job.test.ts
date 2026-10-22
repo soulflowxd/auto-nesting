@@ -40,6 +40,16 @@ describe('stock and job contracts',()=>{
     expect(rotated.nest.placements).toHaveLength(1);
     expect(rotated.nest.placements[0].rotationDeg%180).toBe(90);
   });
+  it('keeps the first sheet clear of marked used areas',()=>{
+    const marked={...settings,blockedAreas:[{x:0,y:0,width:2,height:4}]};
+    const group=nestJob([fixturePart({quantity:1})],{'al7075-3':marked})[0];
+    expect(group.nest.placements).toHaveLength(1);
+    expect(group.nest.placements[0].sheetIndex).toBe(0);
+    expect(group.nest.placements[0].x).toBeGreaterThanOrEqual(2+marked.gapIn-1e-6);
+    expect(group.errors[0]).toEqual([]);
+    expect(validateSheet([placement(.25,.25)],marked,0)).toContain('P: overlaps a marked used area or its spacing.');
+    expect(validateSheet([placement(.25,.25)],marked,1)).toEqual([]);
+  });
   it('rejects invalid quantities and duplicate IDs in saved projects',()=>{
     const base={version:1,name:'Job',parts:[fixturePart({quantity:0})],settings:{}};
     expect(()=>parseJob(JSON.stringify(base))).toThrow(/quantity/);
