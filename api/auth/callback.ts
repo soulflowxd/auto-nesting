@@ -1,5 +1,5 @@
 import {createRemoteJWKSet,jwtVerify} from 'jose';
-import {ADMIN_EMAIL,clearCookie,clientId,clientSecret,cookie,cookies} from '../../server/auth';
+import {ADMIN_EMAIL,clearCookie,clientId,clientSecret,cookie,cookies} from '../../server/auth.js';
 
 export async function GET(request:Request){
   const url=new URL(request.url),saved=cookies(request),id=clientId(),secret=clientSecret();

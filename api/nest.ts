@@ -1,6 +1,6 @@
-import {adminSession,sameOrigin} from '../server/auth';
-import {parseJob} from '../src/lib/job';
-import {nestJob} from '../src/lib/nest-job';
+import {adminSession,sameOrigin} from '../server/auth.js';
+import {parseJob} from '../src/lib/job.js';
+import {nestJob} from '../src/lib/nest-job.js';
 
 export async function POST(request:Request){
   if(!sameOrigin(request)||!await adminSession(request))return Response.json({error:'Admin sign-in required.'},{status:403});

@@ -1,6 +1,6 @@
 import type { GeometryAnalysis } from './reference/geometry/types';
 import type { NestResult } from './reference/nesting';
-import { getStock, settingsErrors, type SheetSettings } from './materials';
+import { getStock, settingsErrors, type SheetSettings } from './materials.js';
 
 export type JobPart = {id: string; name: string; stockId: string; quantity: number; analysis: GeometryAnalysis};
 export type GroupResult = {stockId: string; settings: SheetSettings; nest: NestResult; errors: Record<number, string[]>};

@@ -1,4 +1,4 @@
-import {challenge,clientId,cookie,nonce} from '../../server/auth';
+import {challenge,clientId,cookie,nonce} from '../../server/auth.js';
 
 export function GET(request:Request){
   const id=clientId();

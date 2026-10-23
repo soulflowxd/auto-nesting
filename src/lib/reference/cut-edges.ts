@@ -1,4 +1,4 @@
-import { classifyGeometryLoops } from "@/lib/reference/geometry/loop-hierarchy";
+import { classifyGeometryLoops } from "./geometry/loop-hierarchy.js";
 import type { Point2D } from "@/lib/reference/geometry/types";
 
 /**

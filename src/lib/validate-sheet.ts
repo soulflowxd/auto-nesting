@@ -1,7 +1,7 @@
 import type { NestPlacement, NestPoint } from './reference/nesting';
-import { holeFlags } from './reference/cut-edges';
-import { sanitizeLoopPoints } from './reference/geometry/loop-hierarchy';
-import { settingsErrors, usedAreas, type SheetSettings } from './materials';
+import { holeFlags } from './reference/cut-edges.js';
+import { sanitizeLoopPoints } from './reference/geometry/loop-hierarchy.js';
+import { settingsErrors, usedAreas, type SheetSettings } from './materials.js';
 
 const EPS = 2e-6; // DXF coordinates are written to six decimal places in inches.
 const cross = (a: NestPoint, b: NestPoint, c: NestPoint) => (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);

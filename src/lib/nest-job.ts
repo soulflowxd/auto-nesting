@@ -1,8 +1,8 @@
-import { defaultSettings, getStock, rotationAngles, settingsErrors, usedAreas, type SheetSettings } from './materials';
-import { parseJob, type GroupResult, type JobPart } from './job';
-import { nestOntoStock } from './reference/nesting';
-import { outlineFromAnalysis } from './reference/nest-outline';
-import { validateOutline, validateSheet } from './validate-sheet';
+import { defaultSettings, getStock, rotationAngles, settingsErrors, usedAreas, type SheetSettings } from './materials.js';
+import { parseJob, type GroupResult, type JobPart } from './job.js';
+import { nestOntoStock } from './reference/nesting.js';
+import { outlineFromAnalysis } from './reference/nest-outline.js';
+import { validateOutline, validateSheet } from './validate-sheet.js';
 
 export function nestJob(parts: JobPart[], settings: Record<string, SheetSettings>): GroupResult[] {
   parseJob(JSON.stringify({version:1,name:'Validation',parts,settings}));

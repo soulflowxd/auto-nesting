@@ -23,7 +23,7 @@
  * from geometry and adaptively refines them without a fixed angular increment.
  */
 
-import { freeRotationSeeds, refineFreeRotation } from './free-rotation';
+import { freeRotationSeeds, refineFreeRotation } from './free-rotation.js';
 
 export type NestPoint = { x: number; y: number };
 

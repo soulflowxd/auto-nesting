@@ -1,5 +1,5 @@
 import type { GeometryAnalysis } from "@/lib/reference/geometry/types";
-import { sanitizeLoopPoints } from "@/lib/reference/geometry/loop-hierarchy";
+import { sanitizeLoopPoints } from "./geometry/loop-hierarchy.js";
 import type { NestOutline } from "@/lib/reference/nesting";
 
 /**
