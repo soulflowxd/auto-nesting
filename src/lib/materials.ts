@@ -39,9 +39,18 @@ export const stockLabel = (stock: StockPreset) => `${stock.material} · ${thickn
 export type SheetSettings = {
   widthIn: number; heightIn: number; gapIn: number; marginIn: number;
   rotation: 'fixed' | 'quarter' | 'fine' | 'free';
-  /** Already-used rectangles on the first sheet, in inches from its lower-left corner. */
+  /** Legacy first-sheet rectangles, retained for old project JSON compatibility. */
   blockedAreas?: {x:number;y:number;width:number;height:number}[];
+  /** Already-used rectangles by zero-based sheet index. */
+  blockedAreasBySheet?: Record<string,{x:number;y:number;width:number;height:number}[]>;
+  /** Sheet count before the first used-area edit, for comparison after re-nesting. */
+  originalSheetCount?: number;
+  /** Number of physical sheets exposed for marking before nesting. */
+  markedSheetCount?: number;
 };
+export function usedAreas(s:SheetSettings,index:number) {
+  return s.blockedAreasBySheet?.[String(index)]??(index===0?s.blockedAreas??[]:[]);
+}
 export function defaultSettings(stock: StockPreset): SheetSettings {
   return {widthIn: mmToIn(stock.widthMm), heightIn: mmToIn(stock.heightMm), gapIn: mmToIn(1), marginIn: mmToIn(1), rotation: 'free'};
 }
@@ -67,9 +76,19 @@ export function settingsErrors(s: SheetSettings): string[] {
   if (s.widthIn <= 0 || s.heightIn <= 0 || s.widthIn > 240 || s.heightIn > 240) errors.push('Sheet dimensions must be greater than 0 and at most 240″ (6,096 mm).');
   if (s.gapIn < 0 || s.marginIn < 0 || s.gapIn > 12 || s.marginIn > 12) errors.push('Spacing and margin must be between 0″ (0 mm) and 12″ (304.8 mm).');
   if (s.marginIn * 2 >= Math.min(s.widthIn, s.heightIn)) errors.push('Edge margins leave no usable sheet area.');
-  if (s.blockedAreas !== undefined) {
-    if (!Array.isArray(s.blockedAreas) || s.blockedAreas.length > 32) errors.push('Use at most 32 marked used areas.');
-    else for (const area of s.blockedAreas) {
+  if(s.originalSheetCount!==undefined&&(!Number.isInteger(s.originalSheetCount)||s.originalSheetCount<1||s.originalSheetCount>500))errors.push('Invalid original sheet count.');
+  if(s.markedSheetCount!==undefined&&(!Number.isInteger(s.markedSheetCount)||s.markedSheetCount<1||s.markedSheetCount>500))errors.push('Invalid marked sheet count.');
+  const entries:[string,SheetSettings['blockedAreas']][]=[['0',s.blockedAreas]];
+  if(s.blockedAreasBySheet!==undefined){
+    if(!s.blockedAreasBySheet||Array.isArray(s.blockedAreasBySheet)||typeof s.blockedAreasBySheet!=='object')errors.push('Invalid used areas by sheet.');
+    else entries.push(...Object.entries(s.blockedAreasBySheet));
+  }
+  if(entries.length>501)errors.push('Too many sheets with marked used areas.');
+  for(const [key,areas] of entries){
+    if(!/^(0|[1-9]\d*)$/.test(key)||Number(key)>=500){errors.push('Invalid used-area sheet number.');continue;}
+    if(areas===undefined)continue;
+    if (!Array.isArray(areas) || areas.length > 32) errors.push('Use at most 32 marked used areas per sheet.');
+    else for (const area of areas) {
       if (!area || ![area.x,area.y,area.width,area.height].every(Number.isFinite) || area.width <= 0 || area.height <= 0 || area.x < 0 || area.y < 0 || area.x + area.width > s.widthIn + 1e-8 || area.y + area.height > s.heightIn + 1e-8) {
         errors.push('A marked used area must fit inside the sheet.');
         break;

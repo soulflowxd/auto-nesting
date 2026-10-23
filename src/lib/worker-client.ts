@@ -25,3 +25,12 @@ export async function importCad(file: File, unit: UnitOverride, signal?: AbortSi
 export function runNest(parts: JobPart[],settings: Record<string,SheetSettings>,signal?:AbortSignal):Promise<GroupResult[]> {
   return runWorker(new Worker(new URL('../workers/nest.worker.ts',import.meta.url),{type:'module'}),{parts,settings},signal,[],'Nesting');
 }
+
+export async function runServerNest(parts:JobPart[],settings:Record<string,SheetSettings>,signal?:AbortSignal):Promise<GroupResult[]> {
+  const body=JSON.stringify({version:1,name:'Server nest',parts,settings});
+  if(new TextEncoder().encode(body).length>4_000_000)throw new Error('This job is too large for Vercel server nesting. Use local nesting.');
+  const response=await fetch('/api/nest',{method:'POST',headers:{'Content-Type':'application/json'},body,signal,credentials:'same-origin'});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error??'Server nesting failed.');
+  return data as GroupResult[];
+}

@@ -1,5 +1,5 @@
 import type {GroupResult,JobDocument} from './job';
-import {defaultSettings,getStock} from './materials';
+import {defaultSettings,getStock,usedAreas} from './materials';
 import {outlineFromAnalysis} from './reference/nest-outline';
 import {rotateOutline} from './reference/nesting';
 import {validateSheet} from './validate-sheet';
@@ -26,11 +26,11 @@ export function restoreLayouts(job:JobDocument):GroupResult[] {
     });
     const minimumSheets=placements.length?Math.max(...placements.map(p=>p.sheetIndex))+1:0;
     const sheetsUsed=layout.sheetsUsed??minimumSheets;
-    if(!Number.isInteger(sheetsUsed)||sheetsUsed<minimumSheets||sheetsUsed>500||sheetsUsed>minimumSheets+1)throw new Error('Invalid saved sheet count.');
+    if(!Number.isInteger(sheetsUsed)||sheetsUsed<minimumSheets||sheetsUsed>500||sheetsUsed>Math.max(minimumSheets,settings.markedSheetCount??0,Math.max(-1,...Object.keys(settings.blockedAreasBySheet??{}).map(Number))+1)+(settings.blockedAreas?.length?1:0))throw new Error('Invalid saved sheet count.');
     const errors:Record<number,string[]>={};
     for(let i=0;i<sheetsUsed;i++) {
       const sheet=placements.filter(p=>p.sheetIndex===i);
-      if(!sheet.length&&!(i===0&&settings.blockedAreas?.length))throw new Error('Saved layout has a missing sheet.');
+      if(!sheet.length&&!usedAreas(settings,i).length)throw new Error('Saved layout has a missing sheet.');
       errors[i]=validateSheet(sheet,settings,i);
       if(errors[i].length)throw new Error(`Invalid saved layout: ${errors[i].join(' ')}`);
     }

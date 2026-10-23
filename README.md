@@ -19,8 +19,8 @@ nesting, local project save/open and DXF export work without accounts, API keys
 or a backend connection. Upload `public/samples/bearing-plate.step` to test a
 plate with a through-hole.
 The first STEP import loads an approximately 23 MB CAD kernel; DXF imports do
-not load it. Files are processed in browser workers and stay on your device. No backend
-storage or sign-in is used.
+not load it. Files are processed in browser workers and stay on your device.
+Normal use requires no account or backend storage.
 
 **Save job** downloads one `.nest.json` project containing every part, material
 group, and sheet in the current nest. **Export DXF** downloads only the sheet
@@ -33,13 +33,35 @@ The active job is held in memory: save it before refreshing/closing the page.
 Changing a part, quantity or sheet setting invalidates its material group's
 layout. Run **Auto Nest** again before exporting that group.
 
-For a partly used sheet, choose **Mark used area** above the preview and drag
-rectangles over the material that is no longer available. You can mark multiple
-areas, undo the last one, or clear them. The marked areas apply to sheet 1 of
-the selected material group; additional sheets are fresh stock. Marked areas
-are saved in the project JSON and kept clear by the nester. Changing them
-invalidates the current layout, so run **Auto Nest** again. Used-area shading
-is a preview guide, not an extra DXF cut path.
+For partly used stock, first run **Auto Nest** to see the original sheet count.
+Switch between sheets above the preview, choose **Mark used area**, and drag
+rectangles over material already consumed on each sheet. Use **+ Sheet** to
+mark another physical sheet. You can undo or clear marks on the selected sheet.
+The original count stays visible while you edit and after re-nesting, alongside
+the new count. The project JSON saves the per-sheet marks and original count;
+older JSON with first-sheet marks still opens. Editing marks clears the old
+layout, so run **Auto Nest** again before exporting. Used-area shading is a
+preview guide, not an extra DXF cut path.
+
+## Optional admin server nesting
+
+The admin account `REDACTED_ADMIN_EMAIL` can sign in with Vercel and
+choose **Vercel server** beside Auto Nest. Everyone else uses **This device**.
+The server receives the already-extracted part contours and sheet settings for
+one request, runs the same CPU nesting algorithm, and returns placements. It
+does not receive STEP/DXF files or save projects. Server nesting can still be
+slower than local nesting for large jobs because it adds network transfer and
+Vercel function startup time. Vercel limits function request/response payloads
+to 4.5 MB; the app caps server requests at 4 MB and leaves larger jobs local.
+
+To enable admin sign-in on the deployed site, create a **Sign in with Vercel**
+OAuth app in the Vercel dashboard with `openid` and `email` scopes and callback
+`https://nesting.vercel.app/api/auth/callback`. Set its client ID as
+`VERCEL_OAUTH_CLIENT_ID` and client secret as `VERCEL_OAUTH_CLIENT_SECRET` in
+the Vercel project's environment variables, then redeploy. These secrets must
+never be committed. The server verifies Vercel's signed ID token and checks
+the exact admin email on every nest request. Sign-in opens a new tab so an
+unsaved job in the original tab remains intact; return to that tab afterward.
 
 **Free rotation · automatic** lets the optimizer choose
 arbitrary floating-point angles. It derives orientations from the actual part

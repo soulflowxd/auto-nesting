@@ -1,7 +1,7 @@
 import type { NestPlacement, NestPoint } from './reference/nesting';
 import { holeFlags } from './reference/cut-edges';
 import { sanitizeLoopPoints } from './reference/geometry/loop-hierarchy';
-import { settingsErrors, type SheetSettings } from './materials';
+import { settingsErrors, usedAreas, type SheetSettings } from './materials';
 
 const EPS = 2e-6; // DXF coordinates are written to six decimal places in inches.
 const cross = (a: NestPoint, b: NestPoint, c: NestPoint) => (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
@@ -64,7 +64,7 @@ export function validateSheet(placements: NestPlacement[], settings: SheetSettin
     const points=p.outline.flat().map(v=>({x:v.x+p.x,y:v.y+p.y}));
     if (!points.length || ![p.x,p.y,p.width,p.height].every(Number.isFinite) || points.some(v=>!Number.isFinite(v.x)||!Number.isFinite(v.y))) {errors.push(`${p.label}: invalid coordinates.`);continue;}
     if (points.some(v=>v.x<settings.marginIn-EPS||v.y<settings.marginIn-EPS||v.x>settings.widthIn-settings.marginIn+EPS||v.y>settings.heightIn-settings.marginIn+EPS)) errors.push(`${p.label}: outside the sheet margin.`);
-    if (sheetIndex===0) for (const area of settings.blockedAreas??[]) {
+    for (const area of usedAreas(settings,sheetIndex)) {
       const blocked=[{x:area.x,y:area.y},{x:area.x+area.width,y:area.y},{x:area.x+area.width,y:area.y+area.height},{x:area.x,y:area.y+area.height}];
       let invalid=false;
       for (const polygon of polygons[i]) {

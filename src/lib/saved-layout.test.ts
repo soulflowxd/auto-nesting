@@ -58,3 +58,21 @@ it('restores a fully used first sheet followed by fresh stock',()=>{
   expect(store().results[0].nest.placements[0].sheetIndex).toBe(1);
   expect(exportSheet(store().results[0],1).dxf).toContain('CUT-OUTSIDE');
 });
+
+it('marks multiple sheets after the first nest and preserves the original count in JSON',()=>{
+  const store=()=>useJobStore.getState();store().clear();store().addParts([fixturePart({quantity:2})]);
+  store().updateSettings('al7075-3',{widthIn:3,heightIn:2,gapIn:.1,marginIn:.25});
+  store().setResults(nestJob(store().parts,store().settings),store().revision);
+  expect(store().results[0].nest.sheetsUsed).toBe(2);
+  store().markUsedAreas('al7075-3',0,[{x:0,y:0,width:3,height:2}]);
+  store().markUsedAreas('al7075-3',1,[{x:0,y:0,width:3,height:2}]);
+  expect(store().settings['al7075-3'].originalSheetCount).toBe(2);
+  expect(store().results).toEqual([]);
+  store().setResults(nestJob(store().parts,store().settings),store().revision);
+  expect(store().results[0].nest.placements.map(p=>p.sheetIndex)).toEqual([2,3]);
+  const saved=parseJob(JSON.stringify(currentJob()));
+  store().clear();store().loadJob(saved);
+  expect(store().results[0].nest.sheetsUsed).toBe(4);
+  expect(store().settings['al7075-3'].originalSheetCount).toBe(2);
+  expect(store().results[0].errors[2]).toEqual([]);
+});
