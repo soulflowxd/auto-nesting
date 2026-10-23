@@ -59,14 +59,14 @@ export function ImportPanel({busy,onActivity,ref}:{busy:boolean;onActivity:(valu
   function setQuantity(id:string,quantity:number) {
     setPending(current=>current.map(p=>p.id===id?{...p,quantity}:p));
   }
-  return <section className="import-panel panel-section">
+  return <section className={`import-panel panel-section ${pending.length?'has-pending':''}`}>
     <div className="section-heading"><span className="section-icon"><Upload size={16}/></span><h2>Import parts</h2><span className="step-number">01</span></div>
-    <p className="section-description">Drop CAD files, then choose material and thickness for each part.</p>
+    <p className="section-description">{pending.length?'Choose material and thickness for each part.':'Drop CAD files, then choose material and thickness for each part.'}</p>
     <input ref={input} className="sr-only" aria-label="Upload CAD files" type="file" multiple accept=".dxf,.step,.stp" disabled={busy} onChange={e=>void upload(Array.from(e.target.files??[]))}/>
-    <button className={`drop-zone ${drag?'dragging':''}`} disabled={busy} onClick={()=>input.current?.click()} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);void upload(Array.from(e.dataTransfer.files));}}>
-      {active?<LoaderCircle size={23} className="spin"/>:<FileUp size={25} strokeWidth={1.5}/>}
-      <strong>{active?'Reading geometry…':'Drop files or browse'}</strong>
-      <span>STEP, STP or DXF · up to 20 MB each</span>
+    <button className={`drop-zone ${pending.length?'compact':''} ${drag?'dragging':''}`} disabled={busy} onClick={()=>input.current?.click()} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);void upload(Array.from(e.dataTransfer.files));}}>
+      {active?<LoaderCircle size={pending.length?17:23} className="spin"/>:<FileUp size={pending.length?18:25} strokeWidth={1.5}/>}
+      <strong>{active?'Reading geometry…':pending.length?'Add more CAD files':'Drop files or browse'}</strong>
+      {!pending.length&&<span>STEP, STP or DXF · up to 20 MB each</span>}
     </button>
     <label className="inline-select">Unitless DXF units<select aria-label="Unitless DXF units" value={unit} disabled={busy} onChange={e=>setUnit(e.target.value as UnitOverride)}><option value="in">Inches (mm shown)</option><option value="mm">Millimeters (in shown)</option></select></label>
     {active&&<div className="processing-row"><span className="truncate">{active}</span><button className="icon-button" title="Cancel import" aria-label="Cancel import" onClick={()=>controller.current?.abort()}><X size={16}/></button></div>}
