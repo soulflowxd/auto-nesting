@@ -129,8 +129,8 @@ separate sheets. Custom sheet dimensions support remnants.
   with coordinates to 0.000001″ (0.0000254 mm). Review large curved parts in CAM for
   your required precision. Display rounding never changes stock dimensions.
 - Limits: 20 MB per input, 100 designs, 500 total copies, 20,000 points and 256
-  loops per part. Computations may be cancelled; a three-minute timeout stops
-  unusually expensive jobs.
+  loops per part. Local computations can be cancelled and have no app-imposed
+  time limit. Vercel server nesting remains subject to its function time limit.
 
 ## Local data
 

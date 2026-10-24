@@ -4,9 +4,8 @@ import type { SheetSettings } from './materials';
 
 function runWorker<T>(worker: Worker, message: unknown, signal?: AbortSignal, transfer: Transferable[]=[], label='CAD'): Promise<T> {
   return new Promise((resolve,reject)=>{
-    const end=()=>{clearTimeout(timer);signal?.removeEventListener('abort',cancel);worker.terminate();};
+    const end=()=>{signal?.removeEventListener('abort',cancel);worker.terminate();};
     const cancel=()=>{end();reject(new Error('Operation cancelled.'));};
-    const timer=setTimeout(()=>{end();reject(new Error('Processing timed out. Try fewer copies or a simpler part.'));},180000);
     signal?.addEventListener('abort',cancel,{once:true});
     if(signal?.aborted) {cancel();return;}
     worker.onmessage=e=>{end();if(e.data.error) reject(new Error(e.data.error));else resolve(e.data.result as T);};
