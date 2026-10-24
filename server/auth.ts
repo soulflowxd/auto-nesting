@@ -1,7 +1,7 @@
 import {createHash,randomBytes} from 'node:crypto';
 import {createRemoteJWKSet,jwtVerify} from 'jose';
 
-export const ADMIN_EMAIL='REDACTED_ADMIN_EMAIL';
+export const adminEmail=()=>process.env.ITKAN_ADMIN_EMAIL?.trim().toLowerCase();
 const jwks=createRemoteJWKSet(new URL('https://vercel.com/.well-known/jwks'));
 export const clientId=()=>process.env.VERCEL_OAUTH_CLIENT_ID;
 export const clientSecret=()=>process.env.VERCEL_OAUTH_CLIENT_SECRET;
@@ -13,10 +13,11 @@ export function cookies(request:Request){return Object.fromEntries((request.head
 export async function adminSession(request:Request){
   const token=cookies(request).itkan_admin;
   const id=clientId();
-  if(!token||!id)return false;
+  const email=adminEmail();
+  if(!token||!id||!email)return false;
   try{
     const {payload}=await jwtVerify(token,jwks,{issuer:'https://vercel.com',audience:id});
-    return typeof payload.email==='string'&&payload.email.toLowerCase()===ADMIN_EMAIL;
+    return typeof payload.email==='string'&&payload.email.toLowerCase()===email;
   }catch{return false;}
 }
 export function sameOrigin(request:Request){const origin=request.headers.get('origin');return !!origin&&origin===new URL(request.url).origin;}

@@ -101,6 +101,9 @@
 .compute-options .server-option:disabled{opacity:1;color:#74859a;cursor:default}
 .compute-options .server-option:disabled strong{color:#66778d}
 .compute-options .compute-sign-out{border-top:1px solid #edf1f5;border-radius:0;margin-top:3px;color:#687b92;min-height:33px}
+.sheet-toolbar-actions{display:flex;align-items:center;gap:8px;flex:none}
+.remove-added-sheet{border:1px solid #dce4ef;border-radius:5px;background:#fff;color:#52657b;padding:5px 7px;font-size:10px;white-space:nowrap}
+.remove-added-sheet:hover:not(:disabled){border-color:#bdcbdc;color:#a13d3d;background:#fff7f7}
 .pending-parts,.pending-part{grid-template-columns:minmax(0,1fr);width:100%;max-width:100%}
 .pending-part-preview,.pending-part-actions,.pending-part .stock-selector,.pending-part .stock-selector label,.quantity-stepper{width:100%;min-width:0;max-width:100%}
 .pending-part-preview strong{overflow-wrap:anywhere}

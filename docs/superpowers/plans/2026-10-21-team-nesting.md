@@ -21,7 +21,7 @@
 
 ## File map
 
-`src/lib/reference/` contains attributed core modules and regression tests from INTERNAL_SOURCE. `src/lib/materials.ts`, `job.ts`, `nest-job.ts` and `validate-sheet.ts` implement stock and job rules. `src/workers/` isolates CAD and nesting computation. `src/components/` provides ImportPanel, PartList, StockPanel, SheetPreview and CloudProjects. `src/stores/job-store.ts` owns edits/results. `convex/` owns auth, schema and project functions. `public/samples/` contains runnable CAD examples.
+`src/lib/reference/` contains geometry and nesting modules and regression tests. `src/lib/materials.ts`, `job.ts`, `nest-job.ts` and `validate-sheet.ts` implement stock and job rules. `src/workers/` isolates CAD and nesting computation. `src/components/` provides ImportPanel, PartList, StockPanel, SheetPreview and CloudProjects. `src/stores/job-store.ts` owns edits/results. `convex/` owns auth, schema and project functions. `public/samples/` contains runnable CAD examples.
 
 ### Task 1: Core geometry and nesting
 

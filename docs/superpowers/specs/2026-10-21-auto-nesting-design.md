@@ -112,11 +112,8 @@ The active job works locally without credentials; saving/reopening cloud
 projects requires configuration of a separate Convex deployment. Never reuse
 the scouting application's credentials or modify its deployment.
 
-Adapt the geometry analysis, contour nesting and DXF writing modules from
-INTERNAL_SOURCE, inspected at commit
-`6100cdc2a44bb573b672ae8c5ecd6535d0dc90f8`. Preserve provenance in a third-party
-notice and inspect applicable repository notices before bringing code across.
-Keep imported core modules separate from the team-specific app workflow.
+Keep geometry analysis, contour nesting and DXF writing modules separate from
+the team-specific app workflow.
 
 The reference project uses dxf-parser for DXF and RepliCAD/OpenCascade WASM for
 STEP. Reuse its geometry types, unit conversions and error handling. The team

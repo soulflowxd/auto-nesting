@@ -10,6 +10,7 @@ type JobState = {
   removePart:(id:string)=>void;updateSettings:(id:string,patch:Partial<SheetSettings>)=>void;
   markUsedAreas:(id:string,index:number,areas:NonNullable<SheetSettings['blockedAreas']>)=>void;
   addMarkedSheet:(id:string)=>void;
+  removeMarkedSheet:(id:string,index:number)=>void;
   setResults:(results:GroupResult[],revision:number)=>void;loadJob:(job:JobDocument)=>void;clear:()=>void;
 };
 function ensureSettings(parts:JobPart[],settings:Record<string,SheetSettings>) {
@@ -37,6 +38,19 @@ export const useJobStore=create<JobState>((set)=>({
     return {settings:{...s.settings,[id]:{...previous,blockedAreasBySheet,originalSheetCount:baseline,markedSheetCount:Math.max(previous.markedSheetCount??0,index+1)}},results:s.results.filter(g=>g.stockId!==id),revision:s.revision+1};
   }),
   addMarkedSheet:id=>set(s=>{const previous=s.settings[id]??defaultSettings(getStock(id));const baseline=previous.originalSheetCount??s.results.find(g=>g.stockId===id)?.nest.sheetsUsed;return {settings:{...s.settings,[id]:{...previous,markedSheetCount:Math.max(previous.markedSheetCount??0,baseline??0,1)+1,originalSheetCount:baseline}},results:s.results.filter(g=>g.stockId!==id),revision:s.revision+1};}),
+  removeMarkedSheet:(id,index)=>set(s=>{
+    const previous=s.settings[id];
+    const baseline=previous?.originalSheetCount??1;
+    const count=previous?.markedSheetCount??0;
+    if(!previous||index<baseline||index>=count)return s;
+    const blockedAreasBySheet:NonNullable<SheetSettings['blockedAreasBySheet']>={};
+    for(const [key,areas] of Object.entries(previous.blockedAreasBySheet??{})){
+      const sheet=Number(key);
+      if(sheet<index)blockedAreasBySheet[key]=areas;
+      else if(sheet>index)blockedAreasBySheet[String(sheet-1)]=areas;
+    }
+    return {settings:{...s.settings,[id]:{...previous,markedSheetCount:count-1,blockedAreasBySheet}},results:s.results.filter(g=>g.stockId!==id),revision:s.revision+1};
+  }),
   setResults:(results,revision)=>set(s=>s.revision===revision?{results}:{}),
   loadJob:job=>{const settings=ensureSettings(job.parts,job.settings);const results=restoreLayouts({...job,settings});set(s=>({name:job.name,parts:job.parts,settings,results,revision:s.revision+1}));},
   clear:()=>set(s=>({name:'Untitled job',parts:[],settings:{},results:[],revision:s.revision+1})),

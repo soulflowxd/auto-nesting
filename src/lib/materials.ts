@@ -23,7 +23,7 @@ export function getStock(id: string): StockPreset {
   return stock;
 }
 
-/** Original woven SRPP assets from INTERNAL_SOURCE; shared by solid and foam-core stock. */
+/** Woven SRPP assets shared by solid and foam-core stock. */
 export function srppTextureUrl(stock: Pick<StockPreset, 'material' | 'color'>): string | null {
   if (!stock.material.startsWith('SRPP')) return null;
   return stock.color === 'White' ? '/materials/srpp-white.jpg' : '/materials/srpp-decal.png';
@@ -52,7 +52,7 @@ export function usedAreas(s:SheetSettings,index:number) {
   return s.blockedAreasBySheet?.[String(index)]??(index===0?s.blockedAreas??[]:[]);
 }
 export function defaultSettings(stock: StockPreset): SheetSettings {
-  return {widthIn: mmToIn(stock.widthMm), heightIn: mmToIn(stock.heightMm), gapIn: mmToIn(1), marginIn: mmToIn(1), rotation: 'free'};
+  return {widthIn: mmToIn(stock.widthMm), heightIn: mmToIn(stock.heightMm), gapIn: mmToIn(1.5), marginIn: mmToIn(1.5), rotation: 'free'};
 }
 
 function rotationError(s: SheetSettings): string | null {
