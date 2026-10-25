@@ -28,6 +28,10 @@ Normal use requires no account or backend storage.
 **Save job** downloads one `.nest.json` project containing every part, material
 group, and sheet in the current nest. **Export DXF** downloads only the sheet
 currently shown; select each sheet in turn to export its DXF.
+For a single STEP/STP part, use its **DXF** button on the import card or in the
+parts queue to download its flat cut contours without nesting or choosing stock.
+The part DXF uses inches, with blue outside contours and red holes; it contains
+one part at the origin and no sheet outline or quantity copies.
 Drag a project JSON anywhere onto the workspace, or use Open job.
 Opening restores the layout immediately, with geometry and clearance checked.
 Older projects without layouts still open and can be nested again. DXF downloads

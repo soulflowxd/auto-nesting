@@ -1,5 +1,5 @@
-import { Layers2, Trash2, FileBox } from 'lucide-react';
-import { useId } from 'react';
+import { Layers2, Trash2, FileBox, Download } from 'lucide-react';
+import { useId, useState } from 'react';
 import { useJobStore } from '../stores/job-store';
 import { AVAILABLE_STOCKS, dimension, getStock, stockLabel, srppTextureUrl } from '../lib/materials';
 import { MaterialPattern } from './MaterialPattern';
@@ -7,6 +7,7 @@ import { outlineFromAnalysis } from '../lib/reference/nest-outline';
 import { holeFlags } from '../lib/reference/cut-edges';
 import { outlinePathData } from '../lib/reference/nesting';
 import type { JobPart } from '../lib/job';
+import { downloadFile, exportPartDxf } from '../lib/export-sheet';
 
 function PartThumb({part}:{part:JobPart}) {
   const patternId=`thumb-${useId().replace(/[^a-zA-Z0-9_-]/g,'')}`;
@@ -19,16 +20,22 @@ function PartThumb({part}:{part:JobPart}) {
 }
 export function PartList({disabled}:{disabled:boolean}) {
   const {parts,updatePart,removePart}=useJobStore();
+  const [exportError,setExportError]=useState('');
+  const exportPart=(part:JobPart)=>{
+    try {const file=exportPartDxf(part.name,part.analysis);downloadFile(file.filename,file.dxf);setExportError('');}
+    catch(error){setExportError(error instanceof Error?error.message:'DXF export failed.');}
+  };
   const total=parts.reduce((sum,p)=>sum+p.quantity,0);
   return <section className="parts-panel panel-section">
     <div className="section-heading"><span className="section-icon"><Layers2 size={16}/></span><h2>Parts queue</h2><span className="count-badge">{total}</span></div>
+    {exportError&&<p className="part-warning" role="alert">{exportError}</p>}
     {!parts.length?<div className="parts-empty"><FileBox size={27} strokeWidth={1.3}/><p>Your parts will appear here.</p><span>Each file is one unique part.</span></div>:<div className="parts-list">{parts.map((p,index)=>{
       const stock=getStock(p.stockId);
       const choices=AVAILABLE_STOCKS.some(s=>s.id===stock.id)?AVAILABLE_STOCKS:[stock,...AVAILABLE_STOCKS];
       const measured=p.analysis.sourceThicknessMm;
       const mismatch=measured!==undefined&&Math.abs(measured-stock.thicknessMm)>.01;
       return <article className="part-card" key={p.id}>
-        <div className="part-overview"><div className="part-thumb"><PartThumb part={p}/></div><div className="part-info"><span className="part-index">PART {String(index+1).padStart(2,'0')}</span><h3 title={p.name}>{p.name}</h3><p>{dimension(p.analysis.boundingBox.width)} ×<br/>{dimension(p.analysis.boundingBox.height)}</p></div><button className="icon-button delete-button" disabled={disabled} title={`Remove ${p.name}`} aria-label={`Remove ${p.name}`} onClick={()=>removePart(p.id)}><Trash2 size={15}/></button></div>
+        <div className="part-overview"><div className="part-thumb"><PartThumb part={p}/></div><div className="part-info"><span className="part-index">PART {String(index+1).padStart(2,'0')}</span><h3 title={p.name}>{p.name}</h3><p>{dimension(p.analysis.boundingBox.width)} ×<br/>{dimension(p.analysis.boundingBox.height)}</p></div>{/\.(step|stp)$/i.test(p.name)&&<button type="button" className="part-dxf-action" disabled={disabled} aria-label={`Export ${p.name} as DXF`} title="Export this STEP part as DXF" onClick={()=>exportPart(p)}><Download size={12}/>DXF</button>}<button className="icon-button delete-button" disabled={disabled} title={`Remove ${p.name}`} aria-label={`Remove ${p.name}`} onClick={()=>removePart(p.id)}><Trash2 size={15}/></button></div>
         <div className="part-edit"><label>Stock<select value={p.stockId} disabled={disabled} aria-label={`Stock for ${p.name}`} onChange={e=>updatePart(p.id,{stockId:e.target.value})}>{choices.map(s=><option key={s.id} value={s.id}>{stockLabel(s)}</option>)}</select></label><label className="quantity-label">Qty<input aria-label={`Quantity for ${p.name}`} type="number" min={1} max={500} step={1} value={p.quantity} disabled={disabled} onChange={e=>updatePart(p.id,{quantity:Number(e.target.value)})}/></label></div>
         {measured!==undefined&&<p className={mismatch?'part-warning':'field-hint'}>STEP: {dimension(measured/25.4)}{mismatch?' — differs from selected stock. Profile stays unchanged.':''}</p>}
         {p.analysis.warnings.filter(w=>!w.startsWith('STEP thickness')).map((w,i)=><p className="field-hint" key={i}>{w}</p>)}

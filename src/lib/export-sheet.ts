@@ -3,6 +3,20 @@ import { edgeLayer, holeFlags } from './reference/cut-edges';
 import { validateSheet } from './validate-sheet';
 import { getStock, number } from './materials';
 import type { GroupResult } from './job';
+import type { GeometryAnalysis } from './reference/geometry/types';
+import { outlineFromAnalysis } from './reference/nest-outline';
+
+export function exportPartDxf(name:string,analysis:GeometryAnalysis): {filename:string;dxf:string} {
+  const outline=outlineFromAnalysis(analysis);
+  if(!outline?.length)throw new Error('This part has no closed contours to export.');
+  const holes=holeFlags(outline);
+  const layers=[edgeLayer('CUT',false),edgeLayer('CUT',true)];
+  const polylines=outline.map((loop,i)=>({layer:edgeLayer('CUT',holes[i]).name,closed:true,points:loop}));
+  const {width,height}=analysis.boundingBox;
+  const dxf=writeDxf({polylines,layers,extents:{minX:0,minY:0,maxX:width,maxY:height}});
+  const stem=name.replace(/\.(step|stp)$/i,'').trim().replace(/[<>:"/\\|?*]/g,'-').split('').map(char=>char.charCodeAt(0)<32?'-':char).join('').replace(/[. ]+$/,'')||'part';
+  return {filename:`${stem}.dxf`,dxf};
+}
 
 export function exportSheet(group: GroupResult, sheetIndex: number, projectName?:string): {filename: string; dxf: string} {
   const placements=group.nest.placements.filter(p=>p.sheetIndex===sheetIndex);

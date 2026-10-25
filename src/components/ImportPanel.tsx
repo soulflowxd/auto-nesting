@@ -1,5 +1,5 @@
 import { useImperativeHandle, useRef, useState, type Ref } from 'react';
-import { Upload, FileUp, LoaderCircle, X, CircleAlert, Minus, Plus } from 'lucide-react';
+import { Upload, FileUp, LoaderCircle, X, CircleAlert, Minus, Plus, Download } from 'lucide-react';
 import { StockSelector, type StockChoice } from './StockSelector';
 import { importCad } from '../lib/worker-client';
 import { useJobStore } from '../stores/job-store';
@@ -9,6 +9,7 @@ import { AVAILABLE_STOCKS, dimension } from '../lib/materials';
 import { outlineFromAnalysis } from '../lib/reference/nest-outline';
 import { outlinePathData } from '../lib/reference/nesting';
 import { holeFlags } from '../lib/reference/cut-edges';
+import { downloadFile, exportPartDxf } from '../lib/export-sheet';
 
 type PendingPart = { id:string; name:string; analysis:JobPart['analysis']; quantity:number; choice:StockChoice };
 type ImportStatus={name:string;error:string};
@@ -59,6 +60,10 @@ export function ImportPanel({busy,onActivity,ref}:{busy:boolean;onActivity:(valu
   function setQuantity(id:string,quantity:number) {
     setPending(current=>current.map(p=>p.id===id?{...p,quantity}:p));
   }
+  function exportPendingPart(part:PendingPart) {
+    try {const file=exportPartDxf(part.name,part.analysis);downloadFile(file.filename,file.dxf);}
+    catch(error){setStatuses(current=>[...current,{name:part.name,error:error instanceof Error?error.message:'DXF export failed.'}]);}
+  }
   return <section className={`import-panel panel-section ${pending.length?'has-pending':''}`}>
     <div className="section-heading"><span className="section-icon"><Upload size={16}/></span><h2>Import parts</h2><span className="step-number">01</span></div>
     <p className="section-description">{pending.length?'Choose material and thickness for each part.':'Drop CAD files, then choose material and thickness for each part.'}</p>
@@ -70,7 +75,7 @@ export function ImportPanel({busy,onActivity,ref}:{busy:boolean;onActivity:(valu
     </button>
     <label className="inline-select">Unitless DXF units<select aria-label="Unitless DXF units" value={unit} disabled={busy} onChange={e=>setUnit(e.target.value as UnitOverride)}><option value="in">Inches (mm shown)</option><option value="mm">Millimeters (in shown)</option></select></label>
     {active&&<div className="processing-row"><span className="truncate">{active}</span><button className="icon-button" title="Cancel import" aria-label="Cancel import" onClick={()=>controller.current?.abort()}><X size={16}/></button></div>}
-    {pending.length>0&&<div className="pending-parts"><strong className="pending-heading">Set up imported parts</strong>{pending.map(part=>{const ready=AVAILABLE_STOCKS.some(s=>s.material===part.choice.material&&s.thicknessMm===part.choice.thicknessMm&&s.color===part.choice.color);return <div className="pending-part" key={part.id}><div className="pending-part-header"><strong title={part.name}>{part.name}</strong><button className="icon-button" aria-label={`Discard ${part.name}`} onClick={()=>setPending(current=>current.filter(p=>p.id!==part.id))}><X size={14}/></button></div><PendingPreview part={part}/><StockSelector value={part.choice} sourceThicknessMm={part.analysis.sourceThicknessMm} disabled={busy} onChange={choice=>setPending(current=>current.map(p=>p.id===part.id?{...p,choice}:p))}/><div className="pending-part-actions"><label>Quantity<div className="quantity-stepper"><button type="button" aria-label={`Decrease quantity for ${part.name}`} disabled={busy||part.quantity<=1} onClick={()=>setQuantity(part.id,part.quantity-1)}><Minus size={14}/></button><input aria-label={`Quantity for ${part.name}`} type="number" min={1} max={500} step={1} value={part.quantity} disabled={busy} onChange={e=>setQuantity(part.id,Number(e.target.value))}/><button type="button" aria-label={`Increase quantity for ${part.name}`} disabled={busy||part.quantity>=500} onClick={()=>setQuantity(part.id,part.quantity+1)}><Plus size={14}/></button></div></label><button className="primary-button" disabled={busy||!ready||!Number.isInteger(part.quantity)||part.quantity<1||part.quantity>500} onClick={()=>addPart(part)}>Add part</button></div></div>})}</div>}
+    {pending.length>0&&<div className="pending-parts"><strong className="pending-heading">Set up imported parts</strong>{pending.map(part=>{const ready=AVAILABLE_STOCKS.some(s=>s.material===part.choice.material&&s.thicknessMm===part.choice.thicknessMm&&s.color===part.choice.color);return <div className="pending-part" key={part.id}><div className="pending-part-header"><strong title={part.name}>{part.name}</strong><div className="pending-part-header-actions">{/\.(step|stp)$/i.test(part.name)&&<button type="button" className="part-dxf-action" disabled={busy} aria-label={`Export ${part.name} as DXF`} title="Export this STEP part as DXF" onClick={()=>exportPendingPart(part)}><Download size={12}/>DXF</button>}<button className="icon-button" aria-label={`Discard ${part.name}`} onClick={()=>setPending(current=>current.filter(p=>p.id!==part.id))}><X size={14}/></button></div></div><PendingPreview part={part}/><StockSelector value={part.choice} sourceThicknessMm={part.analysis.sourceThicknessMm} disabled={busy} onChange={choice=>setPending(current=>current.map(p=>p.id===part.id?{...p,choice}:p))}/><div className="pending-part-actions"><label>Quantity<div className="quantity-stepper"><button type="button" aria-label={`Decrease quantity for ${part.name}`} disabled={busy||part.quantity<=1} onClick={()=>setQuantity(part.id,part.quantity-1)}><Minus size={14}/></button><input aria-label={`Quantity for ${part.name}`} type="number" min={1} max={500} step={1} value={part.quantity} disabled={busy} onChange={e=>setQuantity(part.id,Number(e.target.value))}/><button type="button" aria-label={`Increase quantity for ${part.name}`} disabled={busy||part.quantity>=500} onClick={()=>setQuantity(part.id,part.quantity+1)}><Plus size={14}/></button></div></label><button className="primary-button" disabled={busy||!ready||!Number.isInteger(part.quantity)||part.quantity<1||part.quantity>500} onClick={()=>addPart(part)}>Add part</button></div></div>})}</div>}
     {statuses.length>0&&<div className="import-status" aria-live="polite">{statuses.map((s,i)=><div key={i} className="status-error"><CircleAlert size={14}/><span><strong>{s.name}</strong><span>{s.error}</span></span></div>)}</div>}
   </section>;
 }
