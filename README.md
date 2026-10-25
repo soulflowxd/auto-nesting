@@ -67,13 +67,16 @@ To enable admin sign-in, set `ITKAN_ADMIN_EMAIL`, `ITKAN_ADMIN_USERNAME`,
 project's environment variables, then redeploy. The password hash uses scrypt
 with a random salt and has the format `scrypt$<salt in base64url>$<64-byte hash
 in base64url>`. Use `hashAdminPassword` from `server/password-auth.ts` to
-create it from a password of at least 16 characters. Generate the session
+create it from a password of at least 10 characters. Generate the session
 secret from 32 random bytes encoded as base64url. Keep the password, hash,
 and session secret out of GitHub and local project files. The server verifies
 the password and sets a signed, HTTP-only cookie lasting eight hours. The
 server checks that cookie on every nest request. The previous Vercel OAuth
 session remains accepted if it was already configured, but the app's sign-in
 form uses the password credentials.
+From the repository root, `pwsh -File scripts/set-admin-password.ps1` prompts
+for the password without echoing it and updates the production verifier. Run
+`vercel --prod --yes` afterward so the new verifier is used by the live site.
 
 **Free rotation · automatic** lets the optimizer choose
 arbitrary floating-point angles. It derives orientations from the actual part

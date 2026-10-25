@@ -37,7 +37,7 @@ export async function passwordMatches(identifier:string,password:string){
 }
 
 export async function hashAdminPassword(password:string){
-  if(password.length<16||password.length>256)throw new Error('Use a password between 16 and 256 characters.');
+  if(password.length<10||password.length>256)throw new Error('Use a password between 10 and 256 characters.');
   const salt=randomBytes(24);
   const hash=await derive(password,salt);
   return `scrypt$${salt.toString('base64url')}$${hash.toString('base64url')}`;
