@@ -1,4 +1,4 @@
-import { Layers2, Trash2, FileBox, Download } from 'lucide-react';
+import { Layers2, Trash2, Download } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useJobStore } from '../stores/job-store';
 import { AVAILABLE_STOCKS, dimension, getStock, stockLabel, srppTextureUrl } from '../lib/materials';
@@ -29,7 +29,7 @@ export function PartList({disabled}:{disabled:boolean}) {
   return <section className="parts-panel panel-section">
     <div className="section-heading"><span className="section-icon"><Layers2 size={16}/></span><h2>Parts queue</h2><span className="count-badge">{total}</span></div>
     {exportError&&<p className="part-warning" role="alert">{exportError}</p>}
-    {!parts.length?<div className="parts-empty"><FileBox size={27} strokeWidth={1.3}/><p>Your parts will appear here.</p><span>Each file is one unique part.</span></div>:<div className="parts-list">{parts.map((p,index)=>{
+    {!parts.length?<div className="parts-empty"><p>No parts added</p><span>Import a STEP or DXF file to start.</span></div>:<div className="parts-list">{parts.map((p,index)=>{
       const stock=getStock(p.stockId);
       const choices=AVAILABLE_STOCKS.some(s=>s.id===stock.id)?AVAILABLE_STOCKS:[stock,...AVAILABLE_STOCKS];
       const measured=p.analysis.sourceThicknessMm;

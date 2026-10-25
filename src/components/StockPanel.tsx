@@ -12,14 +12,14 @@ export function StockPanel({stockId,onSelect,disabled}:{stockId:string;onSelect:
   const [placementUnit,setPlacementUnit]=useState<'in'|'mm'>('in');
   const {parts,settings,updateSettings}=useJobStore();
   const groups=[...new Set(parts.map(p=>p.stockId))];
-  if(!groups.length)return <aside className="stock-panel"><div className="panel-section"><div className="section-heading"><span className="section-icon"><Ruler size={16}/></span><h2>Sheet setup</h2><span className="step-number">02</span></div><p className="section-description">Upload a part and choose its material and thickness to set up a sheet.</p></div></aside>;
+  if(!groups.length)return <aside className="stock-panel"><div className="panel-section"><div className="section-heading"><span className="section-icon"><Ruler size={16}/></span><h2>Sheet setup</h2></div><p className="section-description">Upload a part and choose its material and thickness to set up a sheet.</p></div></aside>;
   const stock=getStock(stockId);
   const texture=srppTextureUrl(stock);
   const s=settings[stockId]??defaultSettings(stock);
   const update=(patch:Partial<SheetSettings>)=>updateSettings(stockId,patch);
   const errors=settingsErrors(s);
   return <aside className="stock-panel">
-    <div className="panel-section"><div className="section-heading"><span className="section-icon"><Ruler size={16}/></span><h2>Sheet setup</h2><span className="step-number">02</span></div>
+    <div className="panel-section"><div className="section-heading"><span className="section-icon"><Ruler size={16}/></span><h2>Sheet setup</h2></div>
       <p className="section-description">One material and thickness per sheet.</p>
       {groups.length>1&&<label>Material group<select aria-label="Active material group" value={stockId} onChange={e=>onSelect(e.target.value)}>{groups.map(id=><option value={id} key={id}>{getStock(id).material} · {thicknessLabel(getStock(id).thicknessMm)} · {getStock(id).color}</option>)}</select></label>}
       <div className="stock-summary"><span className={`material-swatch ${stock.color.toLowerCase()}`} style={texture?{backgroundImage:`url(${texture})`,backgroundSize:'64px 64px'}:undefined}/><div><strong>{stock.material}</strong><p>{thicknessLabel(stock.thicknessMm)} · {stock.color}</p></div><span className="stock-vendor">SWYFT</span></div>
