@@ -53,7 +53,7 @@ preview guide, not an extra DXF cut path.
 
 ## Optional admin server nesting
 
-The designated admin can sign in with Vercel and choose **Vercel server** from
+The designated admin can sign in with an email or username and password, then choose **Vercel server** from
 the nesting computer menu. Everyone else uses **Local workspace**.
 The server receives the already-extracted part contours and sheet settings for
 one request, runs the same CPU nesting algorithm, and returns placements. It
@@ -62,15 +62,18 @@ slower than local nesting for large jobs because it adds network transfer and
 Vercel function startup time. Vercel limits function request/response payloads
 to 4.5 MB; the app caps server requests at 4 MB and leaves larger jobs local.
 
-To enable admin sign-in on the deployed site, create a **Sign in with Vercel**
-OAuth app in the Vercel dashboard with `openid` and `email` scopes and callback
-`https://nesting.vercel.app/api/auth/callback`. Set its client ID as
-`VERCEL_OAUTH_CLIENT_ID` and client secret as `VERCEL_OAUTH_CLIENT_SECRET` in
-the Vercel project's environment variables. Set `ITKAN_ADMIN_EMAIL` there to
-the authorized Vercel account address, then redeploy. These values must
-never be committed. The server verifies Vercel's signed ID token and checks
-the exact admin email on every nest request. Sign-in opens a new tab so an
-unsaved job in the original tab remains intact; return to that tab afterward.
+To enable admin sign-in, set `ITKAN_ADMIN_EMAIL`, `ITKAN_ADMIN_USERNAME`,
+`ITKAN_ADMIN_PASSWORD_HASH`, and `ITKAN_ADMIN_SESSION_SECRET` in the Vercel
+project's environment variables, then redeploy. The password hash uses scrypt
+with a random salt and has the format `scrypt$<salt in base64url>$<64-byte hash
+in base64url>`. Use `hashAdminPassword` from `server/password-auth.ts` to
+create it from a password of at least 16 characters. Generate the session
+secret from 32 random bytes encoded as base64url. Keep the password, hash,
+and session secret out of GitHub and local project files. The server verifies
+the password and sets a signed, HTTP-only cookie lasting eight hours. The
+server checks that cookie on every nest request. The previous Vercel OAuth
+session remains accepted if it was already configured, but the app's sign-in
+form uses the password credentials.
 
 **Free rotation · automatic** lets the optimizer choose
 arbitrary floating-point angles. It derives orientations from the actual part

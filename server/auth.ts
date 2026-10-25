@@ -1,5 +1,6 @@
 import {createHash,randomBytes} from 'node:crypto';
 import {createRemoteJWKSet,jwtVerify} from 'jose';
+import {verifyPasswordSession} from './password-auth.js';
 
 export const adminEmail=()=>process.env.ITKAN_ADMIN_EMAIL?.trim().toLowerCase();
 const jwks=createRemoteJWKSet(new URL('https://vercel.com/.well-known/jwks'));
@@ -12,9 +13,11 @@ export const clearCookie=(name:string)=>cookie(name,'',0);
 export function cookies(request:Request){return Object.fromEntries((request.headers.get('cookie')??'').split(';').map(item=>item.trim().split(/=(.*)/s).slice(0,2)).filter(([key])=>key).map(([key,value])=>[key,decodeURIComponent(value??'')]));}
 export async function adminSession(request:Request){
   const token=cookies(request).itkan_admin;
+  if(!token)return false;
+  if(await verifyPasswordSession(token))return true;
   const id=clientId();
   const email=adminEmail();
-  if(!token||!id||!email)return false;
+  if(!id||!email)return false;
   try{
     const {payload}=await jwtVerify(token,jwks,{issuer:'https://vercel.com',audience:id});
     return typeof payload.email==='string'&&payload.email.toLowerCase()===email;
