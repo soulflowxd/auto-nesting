@@ -5,7 +5,7 @@ const noStore={'Cache-Control':'no-store'};
 
 export async function POST(request:Request){
   if(!sameOrigin(request))return Response.json({error:'Forbidden.'},{status:403,headers:noStore});
-  if(!passwordAuthConfigured())return Response.json({error:'Admin sign-in is not configured.'},{status:503,headers:noStore});
+  if(!await passwordAuthConfigured())return Response.json({error:'Admin sign-in is not configured.'},{status:503,headers:noStore});
   if(!request.headers.get('content-type')?.startsWith('application/json'))return Response.json({error:'Expected JSON.'},{status:415,headers:noStore});
   if(Number(request.headers.get('content-length'))>2048)return Response.json({error:'Invalid sign-in request.'},{status:400,headers:noStore});
   try{

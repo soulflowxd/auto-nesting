@@ -1,5 +1,6 @@
-import {randomBytes,scrypt,timingSafeEqual} from 'node:crypto';
+import {createHash,randomBytes,scrypt,timingSafeEqual} from 'node:crypto';
 import {SignJWT,jwtVerify} from 'jose';
+import {get,put} from '@vercel/blob';
 const adminEmail=()=>process.env.ITKAN_ADMIN_EMAIL?.trim().toLowerCase();
 
 const derive=(password:string,salt:Buffer)=>new Promise<Buffer>((resolve,reject)=>scrypt(password,salt,64,workFactor,(error,key)=>error?reject(error):resolve(key)));
@@ -7,9 +8,17 @@ const issuer='itkan-nest';
 const audience='itkan-admin';
 const sessionHours=8;
 const workFactor={N:32768,r:8,p:1,maxmem:64*1024*1024};
+const verifierPath='auth/admin-password.txt';
 
-function verifier(){
-  const value=process.env.ITKAN_ADMIN_PASSWORD_HASH?.trim()??'';
+async function storedHash(){
+  if(process.env.BLOB_READ_WRITE_TOKEN||process.env.BLOB_STORE_ID){
+    const blob=await get(verifierPath,{access:'private',useCache:false});
+    if(blob?.statusCode===200)return (await new Response(blob.stream).text()).trim();
+  }
+  return process.env.ITKAN_ADMIN_PASSWORD_HASH?.trim()??'';
+}
+
+function verifier(value:string){
   const match=/^scrypt\$([A-Za-z0-9_-]{22,})\$([A-Za-z0-9_-]{86,})$/.exec(value);
   if(!match)return null;
   const salt=Buffer.from(match[1],'base64url');
@@ -24,12 +33,12 @@ function sessionKey(){
   return key.length>=32?key:null;
 }
 
-export function passwordAuthConfigured(){return !!adminEmail()&&!!verifier()&&!!sessionKey();}
+export async function passwordAuthConfigured(){return !!adminEmail()&&!!verifier(await storedHash())&&!!sessionKey();}
 
 export function adminUsername(){return process.env.ITKAN_ADMIN_USERNAME?.trim().toLowerCase()||undefined;}
 
 export async function passwordMatches(identifier:string,password:string){
-  const stored=verifier(),email=adminEmail();
+  const stored=verifier(await storedHash()),email=adminEmail();
   if(!stored||!email||!password||password.length>256)return false;
   const calculated=await derive(password,stored.salt);
   const identity=identifier.trim().toLowerCase();
@@ -43,10 +52,20 @@ export async function hashAdminPassword(password:string){
   return `scrypt$${salt.toString('base64url')}$${hash.toString('base64url')}`;
 }
 
+export async function saveAdminPassword(password:string){
+  if(!process.env.BLOB_READ_WRITE_TOKEN&&!process.env.BLOB_STORE_ID)throw new Error('Private password storage is not configured.');
+  const hash=await hashAdminPassword(password);
+  await put(verifierPath,hash,{access:'private',allowOverwrite:true,contentType:'text/plain',cacheControlMaxAge:60});
+}
+
+const fingerprint=(hash:string)=>createHash('sha256').update(hash).digest('base64url');
+
 export async function newPasswordSession(){
   const key=sessionKey(),email=adminEmail();
   if(!key||!email)throw new Error('Admin sign-in is not configured.');
-  return new SignJWT({role:'admin'}).setProtectedHeader({alg:'HS256'}).setSubject(email)
+  const hash=await storedHash();
+  if(!verifier(hash))throw new Error('Admin password is not configured.');
+  return new SignJWT({role:'admin',credential:fingerprint(hash)}).setProtectedHeader({alg:'HS256'}).setSubject(email)
     .setIssuer(issuer).setAudience(audience).setIssuedAt().setExpirationTime(`${sessionHours}h`).sign(key);
 }
 
@@ -55,7 +74,7 @@ export async function verifyPasswordSession(token:string){
   if(!key||!email)return false;
   try{
     const {payload}=await jwtVerify(token,key,{issuer,audience,algorithms:['HS256']});
-    return payload.sub===email&&payload.role==='admin';
+    return payload.sub===email&&payload.role==='admin'&&payload.credential===fingerprint(await storedHash());
   }catch{return false;}
 }
 

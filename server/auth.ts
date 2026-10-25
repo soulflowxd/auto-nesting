@@ -15,6 +15,10 @@ export async function adminSession(request:Request){
   const token=cookies(request).itkan_admin;
   if(!token)return false;
   if(await verifyPasswordSession(token))return true;
+  return oauthAdminSession(request);
+}
+export async function oauthAdminSession(request:Request){
+  const token=cookies(request).itkan_admin;
   const id=clientId();
   const email=adminEmail();
   if(!id||!email)return false;

@@ -62,21 +62,22 @@ slower than local nesting for large jobs because it adds network transfer and
 Vercel function startup time. Vercel limits function request/response payloads
 to 4.5 MB; the app caps server requests at 4 MB and leaves larger jobs local.
 
-To enable admin sign-in, set `ITKAN_ADMIN_EMAIL`, `ITKAN_ADMIN_USERNAME`,
-`ITKAN_ADMIN_PASSWORD_HASH`, and `ITKAN_ADMIN_SESSION_SECRET` in the Vercel
-project's environment variables, then redeploy. The password hash uses scrypt
-with a random salt and has the format `scrypt$<salt in base64url>$<64-byte hash
-in base64url>`. Use `hashAdminPassword` from `server/password-auth.ts` to
-create it from a password of at least 10 characters. Generate the session
-secret from 32 random bytes encoded as base64url. Keep the password, hash,
-and session secret out of GitHub and local project files. The server verifies
-the password and sets a signed, HTTP-only cookie lasting eight hours. The
-server checks that cookie on every nest request. The previous Vercel OAuth
-session remains accepted if it was already configured, but the app's sign-in
-form uses the password credentials.
-From the repository root, `pwsh -File scripts/set-admin-password.ps1` prompts
-for the password without echoing it and updates the production verifier. Run
-`vercel --prod --yes` afterward so the new verifier is used by the live site.
+The admin can open **Admin sign in → Sign in with Vercel**, then choose
+**Set password** from the nesting computer menu. This works on a phone and
+does not require a terminal or a redeploy. Only the Vercel OAuth account whose
+email matches `ITKAN_ADMIN_EMAIL` may set or change the password. The app
+stores one salted scrypt password hash in a private Vercel Blob store. No CAD
+files, projects, or nesting results go into that store. A changed password
+invalidates earlier password sessions; Vercel OAuth sessions remain valid.
+
+The Vercel project needs `ITKAN_ADMIN_EMAIL`, `ITKAN_ADMIN_USERNAME`,
+`ITKAN_ADMIN_SESSION_SECRET`, `VERCEL_OAUTH_CLIENT_ID`,
+`VERCEL_OAUTH_CLIENT_SECRET`, and the private store's `BLOB_READ_WRITE_TOKEN`
+as production environment variables. The OAuth callback is
+`https://nesting.vercel.app/api/auth/callback`. Keep these settings out of
+GitHub. A legacy `ITKAN_ADMIN_PASSWORD_HASH` environment variable is accepted
+for older deployments; the private Blob verifier takes precedence once set.
+`scripts/set-admin-password.ps1` remains available for terminal setup.
 
 **Free rotation · automatic** lets the optimizer choose
 arbitrary floating-point angles. It derives orientations from the actual part

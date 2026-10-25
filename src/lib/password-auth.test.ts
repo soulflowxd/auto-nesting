@@ -19,7 +19,7 @@ afterEach(()=>{for(const [key,value] of Object.entries(previous)){if(value===und
 const request=(identifier:string,secret:string,requestOrigin=origin)=>new Request(`${origin}/api/auth/login`,{method:'POST',headers:{Origin:requestOrigin,'Content-Type':'application/json'},body:JSON.stringify({identifier,password:secret})});
 
 it('accepts the configured email or username and issues a signed admin session',async()=>{
-  expect(passwordAuthConfigured()).toBe(true);
+  expect(await passwordAuthConfigured()).toBe(true);
   for(const identifier of ['admin@example.test','Luqman']){
     const response=await login(request(identifier,password));
     expect(response.status).toBe(200);

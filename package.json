@@ -15,6 +15,7 @@
   "dependencies": {
     "@fontsource/oswald": "^5.3.0",
     "@fontsource/poppins": "^5.3.0",
+    "@vercel/blob": "^2.8.2",
     "dxf-parser": "^1.1.2",
     "jose": "^6.2.13",
     "lucide-react": "^1.21.0",
