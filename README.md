@@ -147,7 +147,8 @@ separate sheets. Custom sheet dimensions support remnants.
 
 Jobs stay in browser memory. Save job downloads JSON to your device; Open job
 restores it (up to 20 MB). Export DXF downloads the selected sheet. Save before
-refreshing or closing the page. No account or backend is used.
+refreshing or closing the page. Admin sign-in is optional; CAD files and jobs
+are not stored on the backend.
 
 ## Verification
 
@@ -169,8 +170,17 @@ To inspect an exported DXF independently:
 bun scripts/verify-export.ts "C:\path\to\sheet.dxf"
 ```
 
-The Vercel config builds a static Vite site. No backend configuration is needed.
+The Vercel config builds the Vite site and optional admin API routes.
 `.env*` files are ignored by Git. Do not commit CAD jobs, credentials, or private
 team files to this public repository.
 
-See [Third-party notices](THIRD_PARTY_NOTICES.md) for dependency licenses.
+## License
+
+ITKAN Nest's original code and assets are licensed under the
+[PolyForm Noncommercial License 1.0.0](LICENSE.md), copyright 2026 Luqman Khan.
+Noncommercial use, modification, and sharing are permitted under its terms;
+commercial use requires a separate license from the copyright holder. This is
+a source-available license, not MIT.
+
+Third-party components keep their own licenses. See
+[Third-party notices](THIRD_PARTY_NOTICES.md).
