@@ -314,14 +314,18 @@ html[data-theme='dark'] .theme-sun{transform:translateY(23px);opacity:0}
 html[data-theme='dark'] .theme-moon{transform:translateY(0);opacity:1}
 html[data-theme='light'] .theme-sun{transform:translateY(0);opacity:1}
 html[data-theme='light'] .theme-moon{transform:translateY(23px);opacity:0}
-html.theme-changing .theme-sun,html.theme-changing .theme-moon{transition:transform .95s cubic-bezier(.22,1,.36,1),opacity .8s ease}
-html.theme-changing body,html.theme-changing .workspace-grid,html.theme-changing .parts-sidebar,html.theme-changing .stock-panel,html.theme-changing .panel-section,html.theme-changing .preview-panel,html.theme-changing .sheet-toolbar,html.theme-changing .sheet-tabs,html.theme-changing .sheet-viewport,html.theme-changing .part-card,html.theme-changing .pending-part,html.theme-changing .pending-part-preview,html.theme-changing .stock-summary,html.theme-changing input,html.theme-changing select,html.theme-changing .modal{transition:background-color 1.1s ease,color 1.1s ease,border-color 1.1s ease}
-html.theme-to-light::after,html.theme-to-dark::after{content:"";position:fixed;inset:0;z-index:50;pointer-events:none}
-html.theme-to-light::after{background:radial-gradient(ellipse 60% 50% at 45% 110%,rgba(255,230,163,.72),transparent 80%),linear-gradient(180deg,rgba(40,65,183,.64),rgba(111,113,175,.46) 46%,rgba(255,164,95,.68));animation:theme-sunrise 1.25s ease-in-out both}
-html.theme-to-dark::after{background:radial-gradient(ellipse 60% 50% at 55% 110%,rgba(255,204,128,.55),transparent 80%),linear-gradient(180deg,rgba(28,49,132,.76),rgba(88,74,133,.5) 46%,rgba(227,123,82,.6));animation:theme-sunset 1.25s ease-in-out both}
-@keyframes theme-sunrise{0%{opacity:0;transform:translateY(18%)}35%{opacity:.75;transform:translateY(0)}65%{opacity:.75;transform:translateY(-5%)}100%{opacity:0;transform:translateY(-18%)}}
-@keyframes theme-sunset{0%{opacity:0;transform:translateY(-18%)}35%{opacity:.75;transform:translateY(-5%)}65%{opacity:.75;transform:translateY(0)}100%{opacity:0;transform:translateY(18%)}}
-@media(prefers-reduced-motion:reduce){html.theme-to-light::after,html.theme-to-dark::after{content:none}}
+html.theme-preparing .theme-sun,html.theme-preparing .theme-moon{transition:transform 220ms cubic-bezier(.2,.7,.2,1),opacity 180ms ease}
+html.theme-to-light.theme-preparing .theme-sun{transform:translateY(0);opacity:1}
+html.theme-to-light.theme-preparing .theme-moon{transform:translateY(-23px);opacity:0}
+html.theme-to-dark.theme-preparing .theme-sun{transform:translateY(-23px);opacity:0}
+html.theme-to-dark.theme-preparing .theme-moon{transform:translateY(0);opacity:1}
+html.theme-swipe::view-transition-old(root){animation:none;z-index:1}
+html.theme-swipe::view-transition-new(root){animation:theme-vertical-swipe 1100ms linear both,theme-sunrise-color 1100ms ease-in-out both;z-index:2}
+html.theme-to-dark::view-transition-new(root){animation-name:theme-vertical-swipe,theme-sunset-color}
+@keyframes theme-vertical-swipe{0%{clip-path:ellipse(0 0 at var(--theme-origin-x) var(--theme-origin-y))}12%{clip-path:ellipse(150vw 20.4vh at var(--theme-origin-x) var(--theme-origin-y))}100%{clip-path:ellipse(150vw 170vh at var(--theme-origin-x) var(--theme-origin-y))}}
+@keyframes theme-sunrise-color{0%,100%{filter:none}32%{filter:sepia(.85) saturate(2.1) hue-rotate(-12deg)}68%{filter:sepia(.48) saturate(1.5)}}
+@keyframes theme-sunset-color{0%,100%{filter:none}32%{filter:sepia(.9) saturate(2.2) hue-rotate(-18deg) brightness(1.25)}68%{filter:sepia(.5) saturate(1.6) brightness(1.1)}}
+@media(prefers-reduced-motion:reduce){html.theme-swipe::view-transition-new(root){animation:none}}
 @media(max-width:1450px){.combined-header .workspace-breadcrumb,.combined-header .header-divider{display:none}}
 @media(max-width:1100px){.combined-header{gap:10px;padding-inline:14px}.combined-header .job-name-wrap{max-width:145px}.combined-header .job-actions{gap:5px}.combined-header .job-actions .text-button span{display:none}.combined-header .job-actions .text-button{width:32px;min-height:32px;padding:5px}}
 @media(max-width:900px){.combined-header{display:grid;grid-template-columns:minmax(0,1fr) auto;row-gap:6px}.combined-header .brand{grid-column:1;grid-row:1}.combined-header .header-actions{grid-column:2;grid-row:1;margin-left:auto}.combined-header .job-name-wrap{grid-column:1;grid-row:2;max-width:none}.combined-header .job-actions{grid-column:2;grid-row:2;margin-left:0}}
@@ -340,31 +344,31 @@ html.theme-to-dark::after{background:radial-gradient(ellipse 60% 50% at 55% 110%
 .legend-row strong,.legend-row p,.stock-footer span{font-size:12px;color:#41596e;line-height:1.45}
 .legend-row{align-items:flex-start}
 
-html[data-theme='dark']{color-scheme:dark;color:#e8f0f7;background:#0b1219;--muted:#a3b3c3;--line:#2b3a49}
-html[data-theme='dark'] body,html[data-theme='dark'] .workspace-grid{background:#0b1219}
-html[data-theme='dark'] .parts-sidebar,html[data-theme='dark'] .stock-panel,html[data-theme='dark'] .panel-section{background:#121b24;border-color:#2b3a49}
-html[data-theme='dark'] .preview-panel{background:#101a25}
+html[data-theme='dark']{color-scheme:dark;color:#eceef1;background:#101113;--muted:#a9afb7;--line:#363a40}
+html[data-theme='dark'] body,html[data-theme='dark'] .workspace-grid{background:#101113}
+html[data-theme='dark'] .parts-sidebar,html[data-theme='dark'] .stock-panel,html[data-theme='dark'] .panel-section{background:#1b1d20;border-color:#363a40}
+html[data-theme='dark'] .preview-panel{background:#17191c}
 html[data-theme='dark'] .section-heading,html[data-theme='dark'] .subheading,html[data-theme='dark'] .preview-heading h1,html[data-theme='dark'] .nest-summary strong,html[data-theme='dark'] .sheet-stepper strong,html[data-theme='dark'] .preview-empty h2,html[data-theme='dark'] .parts-empty p,html[data-theme='dark'] .pending-part-header strong,html[data-theme='dark'] .part-info h3,html[data-theme='dark'] .stock-summary strong,html[data-theme='dark'] .modal h2{color:#f0f6fb}
 html[data-theme='dark'] .section-description,html[data-theme='dark'] .field-hint,html[data-theme='dark'] .parts-empty span,html[data-theme='dark'] .preview-empty p,html[data-theme='dark'] .preview-empty .empty-sheet-size,html[data-theme='dark'] .preview-legend,html[data-theme='dark'] .nest-summary>div>span,html[data-theme='dark'] .pending-part-preview strong,html[data-theme='dark'] .part-info p,html[data-theme='dark'] .stock-summary p,html[data-theme='dark'] .legend-row strong,html[data-theme='dark'] .legend-row p,html[data-theme='dark'] .stock-footer span,html[data-theme='dark'] .guide-note,html[data-theme='dark'] label{color:#a9bccd}
-html[data-theme='dark'] input:not(.job-name),html[data-theme='dark'] select,html[data-theme='dark'] .static-field{background:#192633;border-color:#395064;color:#edf5fb}
+html[data-theme='dark'] input:not(.job-name),html[data-theme='dark'] select,html[data-theme='dark'] .static-field{background:#24262a;border-color:#4a4e54;color:#edf0f3}
 html[data-theme='dark'] input::placeholder{color:#91a7b9}
-html[data-theme='dark'] .part-card,html[data-theme='dark'] .pending-part,html[data-theme='dark'] .stock-summary,html[data-theme='dark'] .pending-part-preview,html[data-theme='dark'] .used-area-editor,html[data-theme='dark'] .selection-detail,html[data-theme='dark'] .cloud-project-row{background:#172431;border-color:#34485b;color:#e8f0f7}
+html[data-theme='dark'] .part-card,html[data-theme='dark'] .pending-part,html[data-theme='dark'] .stock-summary,html[data-theme='dark'] .pending-part-preview,html[data-theme='dark'] .used-area-editor,html[data-theme='dark'] .selection-detail,html[data-theme='dark'] .cloud-project-row{background:#24262a;border-color:#42464b;color:#eceef1}
 html[data-theme='dark'] .pending-preview-art,html[data-theme='dark'] .part-thumb{background:#f7fbff;border-color:#456073}
-html[data-theme='dark'] .drop-zone{background:#152a3b;border-color:#397da5;color:#87d5ff}
+html[data-theme='dark'] .drop-zone{background:#20252a;border-color:#397da5;color:#87d5ff}
 html[data-theme='dark'] .drop-zone strong,html[data-theme='dark'] .part-dxf-action{color:#8cd9ff}
 html[data-theme='dark'] .drop-zone span{color:#aac0cf}
 html[data-theme='dark'] .drop-zone.dragging{background:#1b3c52}
-html[data-theme='dark'] .sheet-toolbar,html[data-theme='dark'] .sheet-tabs,html[data-theme='dark'] .used-area-toolbar{background:#172431;border-color:#34485b;color:#dceaf4}
-html[data-theme='dark'] .sheet-viewport{background-color:#172331;background-image:repeating-linear-gradient(45deg,transparent 0,transparent 19px,#223448 19px,#223448 20px);border-color:#34485b}
-html[data-theme='dark'] .sheet-tabs button,html[data-theme='dark'] .sheet-stepper button,html[data-theme='dark'] .zoom-controls button,html[data-theme='dark'] .used-area-toolbar button,html[data-theme='dark'] .remove-added-sheet,html[data-theme='dark'] .secondary-button,html[data-theme='dark'] .text-button,html[data-theme='dark'] .icon-button:not(.theme-toggle){background:#1a2a38;border-color:#3b5368;color:#c7dbea}
+html[data-theme='dark'] .sheet-toolbar,html[data-theme='dark'] .sheet-tabs,html[data-theme='dark'] .used-area-toolbar{background:#24262a;border-color:#42464b;color:#e1e5e9}
+html[data-theme='dark'] .sheet-viewport{background-color:#202226;background-image:repeating-linear-gradient(45deg,transparent 0,transparent 19px,#30343a 19px,#30343a 20px);border-color:#42464b}
+html[data-theme='dark'] .sheet-tabs button,html[data-theme='dark'] .sheet-stepper button,html[data-theme='dark'] .zoom-controls button,html[data-theme='dark'] .used-area-toolbar button,html[data-theme='dark'] .remove-added-sheet,html[data-theme='dark'] .secondary-button,html[data-theme='dark'] .text-button,html[data-theme='dark'] .icon-button:not(.theme-toggle){background:#292c30;border-color:#4a4e54;color:#d1d6dc}
 html[data-theme='dark'] .sheet-tabs button.active,html[data-theme='dark'] .unit-switch button.active,html[data-theme='dark'] .used-area-unit button.active{background:#12628f;color:#fff;border-color:#278fcb}
-html[data-theme='dark'] .unit-switch,html[data-theme='dark'] .unit-switch button,html[data-theme='dark'] .used-area-unit,html[data-theme='dark'] .used-area-unit button,html[data-theme='dark'] .quantity-stepper button{background:#1a2a38;color:#d4e6f3;border-color:#3b5368}
+html[data-theme='dark'] .unit-switch,html[data-theme='dark'] .unit-switch button,html[data-theme='dark'] .used-area-unit,html[data-theme='dark'] .used-area-unit button,html[data-theme='dark'] .quantity-stepper button{background:#292c30;color:#dce1e6;border-color:#4a4e54}
 html[data-theme='dark'] .step-number,html[data-theme='dark'] .count-badge,html[data-theme='dark'] .result-status,html[data-theme='dark'] .result-status.ready{background:#18334a;color:#9cddff;border-color:#356686}
-html[data-theme='dark'] .compute-options,html[data-theme='dark'] .modal{background:#172431;border-color:#3b5368;color:#edf5fb}
+html[data-theme='dark'] .compute-options,html[data-theme='dark'] .modal{background:#24262a;border-color:#4a4e54;color:#edf0f3}
 html[data-theme='dark'] .compute-options button,html[data-theme='dark'] .compute-options a{color:#e6f0f8}
-html[data-theme='dark'] .compute-options button:hover:not(:disabled),html[data-theme='dark'] .compute-options a:hover{background:#23394b}
+html[data-theme='dark'] .compute-options button:hover:not(:disabled),html[data-theme='dark'] .compute-options a:hover{background:#34383d}
 html[data-theme='dark'] .compute-options button small,html[data-theme='dark'] .modal p,html[data-theme='dark'] .help-steps{color:#a9bccd}
-html[data-theme='dark'] .preview-panel>.nest-summary{border-color:#34485b}
+html[data-theme='dark'] .preview-panel>.nest-summary{border-color:#42464b}
 html[data-theme='dark'] .combined-header .job-actions .text-button,html[data-theme='dark'] .combined-header .job-actions .icon-button,html[data-theme='dark'] .combined-header .header-actions>.icon-button{background:transparent;border-color:transparent;color:#c7d6e4}
 html[data-theme='dark'] .combined-header .job-actions .secondary-button{background:transparent;color:#fff;border-color:#6d8294}
 html[data-theme='dark'] .combined-header .job-name{color:#f9fcff}

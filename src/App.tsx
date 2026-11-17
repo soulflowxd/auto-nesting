@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { ChevronRight, ChevronDown, Check, FolderOpen, Save, Play, LoaderCircle, X, RotateCcw, CircleHelp, Download, Sun, Moon } from 'lucide-react';
 import { ImportPanel, type CadImportHandle } from './components/ImportPanel';
 import { PartList } from './components/PartList';
@@ -36,20 +37,26 @@ export default function App() {
   const [nestMode,setNestMode]=useState<'local'|'server'>('local');
   const [theme,setTheme]=useState<'light'|'dark'>(()=>{try{return localStorage.getItem('itkan-nest-theme')==='light'?'light':'dark';}catch{return 'dark';}});
   const computeMenu=useRef<HTMLDetailsElement>(null);
-  const themeMotionTimer=useRef<number|null>(null);
+  const themeSwitchTimer=useRef<number|null>(null);
+  const themeSwitching=useRef(false);
   useEffect(()=>{document.documentElement.dataset.theme=theme;document.querySelector('meta[name="theme-color"]')?.setAttribute('content',theme==='dark'?'#0d1117':'#f7fcff');try{localStorage.setItem('itkan-nest-theme',theme);}catch{/* Storage may be disabled. */}},[theme]);
-  useEffect(()=>()=>{if(themeMotionTimer.current!==null)window.clearTimeout(themeMotionTimer.current);},[]);
+  useEffect(()=>()=>{if(themeSwitchTimer.current!==null)window.clearTimeout(themeSwitchTimer.current);document.documentElement.classList.remove('theme-preparing','theme-swipe','theme-to-light','theme-to-dark');},[]);
   function toggleTheme() {
+    if(themeSwitching.current)return;
     const root=document.documentElement;
     const next=theme==='dark'?'light':'dark';
-    if(themeMotionTimer.current!==null)window.clearTimeout(themeMotionTimer.current);
-    root.classList.remove('theme-changing','theme-to-light','theme-to-dark');
-    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-      void root.offsetWidth;
-      root.classList.add('theme-changing',`theme-to-${next}`);
-      themeMotionTimer.current=window.setTimeout(()=>{root.classList.remove('theme-changing','theme-to-light','theme-to-dark');themeMotionTimer.current=null;},1250);
-    }
-    setTheme(next);
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches||!document.startViewTransition){setTheme(next);return;}
+    themeSwitching.current=true;
+    const toggle=root.querySelector('.theme-toggle')?.getBoundingClientRect();
+    root.style.setProperty('--theme-origin-x',`${toggle ? toggle.left+toggle.width/2 : window.innerWidth}px`);
+    root.style.setProperty('--theme-origin-y',`${toggle ? toggle.top+toggle.height/2 : 0}px`);
+    root.classList.add('theme-preparing',`theme-to-${next}`);
+    themeSwitchTimer.current=window.setTimeout(()=>{
+      themeSwitchTimer.current=null;
+      root.classList.add('theme-swipe');
+      const transition=document.startViewTransition(()=>flushSync(()=>setTheme(next)));
+      void transition.finished.finally(()=>{root.classList.remove('theme-preparing','theme-swipe','theme-to-light','theme-to-dark');themeSwitching.current=false;});
+    },240);
   }
   useEffect(()=>{if(!import.meta.env.PROD)return;const refresh=()=>{void fetch('/api/auth/session',{cache:'no-store'}).then(response=>response.ok?response.json():null).then(data=>{setAdmin(!!data?.admin);setOauthAdmin(!!data?.oauthAdmin);setAdminAvailable(!!data?.configured);setOauthAvailable(!!data?.oauthConfigured);if(!data?.admin)setNestMode('local');}).catch(()=>{});};refresh();window.addEventListener('focus',refresh);return()=>window.removeEventListener('focus',refresh);},[]);
   useEffect(()=>{const dismiss=(event:PointerEvent)=>{if(computeMenu.current&&!computeMenu.current.contains(event.target as Node))computeMenu.current.open=false;};const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&computeMenu.current?.open){computeMenu.current.open=false;computeMenu.current.querySelector('summary')?.focus();}};document.addEventListener('pointerdown',dismiss);document.addEventListener('keydown',escape);return()=>{document.removeEventListener('pointerdown',dismiss);document.removeEventListener('keydown',escape);};},[]);
