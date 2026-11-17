@@ -134,7 +134,7 @@ separate sheets. Custom sheet dimensions support remnants.
 - Curves are tessellated: DXF arcs/circles at 2° steps, STEP circles at 90 samples
   per edge and other STEP curves at 128 samples. Chord error depends on curve
   size (a full 90-segment circle has about 0.061% radius chord deviation).
-  If a STEP file exceeds the 20,000-point limit, its contours are simplified
+  If a STEP or DXF file exceeds the 20,000-point limit, its contours are simplified
   with a maximum additional deviation of 0.005″ (0.127 mm); the actual tolerance
   is reported with the imported part. Export uses the resulting sampled loops,
   with coordinates to 0.000001″ (0.0000254 mm). Review large curved parts in CAM for

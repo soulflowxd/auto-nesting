@@ -2,7 +2,7 @@ import { analyzeDxf } from '../lib/reference/geometry/analyze-dxf';
 import { outlineFromAnalysis } from '../lib/reference/nest-outline';
 import { validateOutline } from '../lib/validate-sheet';
 import type { UnitOverride } from '../lib/reference/geometry/types';
-import { simplifyStepContours } from '../lib/simplify-contours';
+import { simplifyContours } from '../lib/simplify-contours';
 
 self.onmessage=async(event:MessageEvent<{bytes:ArrayBuffer;filename:string;unit:UnitOverride}>)=>{
   try {
@@ -15,7 +15,7 @@ self.onmessage=async(event:MessageEvent<{bytes:ArrayBuffer;filename:string;unit:
       await ensureOpenCascade(wasmUrl);
       return analyzeStep(new Uint8Array(bytes));
     })();
-    if(/\.(step|stp)$/i.test(filename))analysis=simplifyStepContours(analysis);
+    analysis=simplifyContours(analysis,/\.dxf$/i.test(filename)?'DXF':'STEP');
     const count=analysis.loops.reduce((sum,l)=>sum+l.points.length,0);
     if(count>20000 || analysis.loops.length>256) throw new Error('This part is too complex. Use fewer than 20,000 contour points and 256 loops.');
     const outline=outlineFromAnalysis(analysis);

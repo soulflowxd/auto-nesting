@@ -33,14 +33,18 @@ function simplifyClosed(points:Point2D[],tolerance:number):Point2D[] {
   return simplified.length>=4?simplified:points;
 }
 
-/** Reduce oversampled STEP curves with a bounded geometric error (at most 0.005 in). */
-export function simplifyStepContours(analysis:GeometryAnalysis,maxPoints=20000):GeometryAnalysis {
+/** Reduce oversampled CAD curves with a bounded geometric error (at most 0.005 in). */
+export function simplifyContours(analysis:GeometryAnalysis,format:'STEP'|'DXF',maxPoints=20000):GeometryAnalysis {
   if(analysis.loops.reduce((sum,loop)=>sum+loop.points.length,0)<=maxPoints)return analysis;
   for(const tolerance of [0.00025,0.0005,0.001,0.002,0.005]){
     const loops=analysis.loops.map(loop=>({...loop,points:simplifyClosed(loop.points,tolerance)}));
     if(loops.reduce((sum,loop)=>sum+loop.points.length,0)<=maxPoints){
-      return {...analysis,loops,warnings:[...analysis.warnings,`Detailed STEP contours were simplified within ${tolerance} in (${(tolerance*25.4).toFixed(3)} mm) to keep nesting responsive.`]};
+      return {...analysis,loops,warnings:[...analysis.warnings,`Detailed ${format} contours were simplified within ${tolerance} in (${(tolerance*25.4).toFixed(3)} mm) to keep nesting responsive.`]};
     }
   }
   return analysis;
+}
+
+export function simplifyStepContours(analysis:GeometryAnalysis,maxPoints=20000):GeometryAnalysis {
+  return simplifyContours(analysis,'STEP',maxPoints);
 }
