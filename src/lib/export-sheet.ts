@@ -14,7 +14,7 @@ export function exportPartDxf(name:string,analysis:GeometryAnalysis): {filename:
   const polylines=outline.map((loop,i)=>({layer:edgeLayer('CUT',holes[i]).name,closed:true,points:loop}));
   const {width,height}=analysis.boundingBox;
   const dxf=writeDxf({polylines,layers,extents:{minX:0,minY:0,maxX:width,maxY:height}});
-  const stem=name.replace(/\.(step|stp)$/i,'').trim().replace(/[<>:"/\\|?*]/g,'-').split('').map(char=>char.charCodeAt(0)<32?'-':char).join('').replace(/[. ]+$/,'')||'part';
+  const stem=name.replace(/\.(dxf|step|stp)$/i,'').trim().replace(/[<>:"/\\|?*]/g,'-').split('').map(char=>char.charCodeAt(0)<32?'-':char).join('').replace(/[. ]+$/,'')||'part';
   return {filename:`${stem}.dxf`,dxf};
 }
 
