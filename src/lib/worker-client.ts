@@ -14,7 +14,7 @@ function runWorker<T>(worker: Worker, message: unknown, signal?: AbortSignal, tr
   });
 }
 
-export async function importCad(file: File, unit: UnitOverride, signal?: AbortSignal): Promise<GeometryAnalysis> {
+export async function importCad(file: File, unit?: UnitOverride, signal?: AbortSignal): Promise<GeometryAnalysis> {
   if(!/\.(dxf|step|stp)$/i.test(file.name)) throw new Error('Choose a DXF, STEP or STP file.');
   if(!file.size) throw new Error('The file is empty.');
   if(file.size>20*1024*1024) throw new Error('Files must be smaller than 20 MB.');

@@ -44,10 +44,10 @@ const DXF_UNITS: Record<number, UnitInfo> = {
 };
 
 function resolveUnit(insUnits: unknown, override?: UnitOverride): UnitInfo {
+  if (override === "in") return DXF_UNITS[1];
+  if (override === "mm") return DXF_UNITS[4];
   const code = typeof insUnits === "number" ? insUnits : Number(insUnits ?? 0);
   if (!code) {
-    if (override === "in") return DXF_UNITS[1];
-    if (override === "mm") return DXF_UNITS[4];
     throw new GeometryError(
       "UNIT_REQUIRED",
       "This DXF does not declare its drawing units. Choose inches or millimeters and try again.",

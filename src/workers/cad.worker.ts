@@ -3,12 +3,20 @@ import { outlineFromAnalysis } from '../lib/reference/nest-outline';
 import { validateOutline } from '../lib/validate-sheet';
 import type { UnitOverride } from '../lib/reference/geometry/types';
 import { simplifyContours } from '../lib/simplify-contours';
+import { GeometryError } from '../lib/reference/geometry/errors';
 
 self.onmessage=async(event:MessageEvent<{bytes:ArrayBuffer;filename:string;unit:UnitOverride}>)=>{
   try {
     const {bytes,filename,unit}=event.data;
     let analysis=await (async()=>{
-      if(/\.dxf$/i.test(filename)) return analyzeDxf(new TextDecoder().decode(bytes),unit);
+      if(/\.dxf$/i.test(filename)) {
+        const dxf=new TextDecoder().decode(bytes);
+        try {return analyzeDxf(dxf,unit);}
+        catch(error) {
+          if(!unit&&error instanceof GeometryError&&error.code==='UNIT_REQUIRED')return analyzeDxf(dxf,'in');
+          throw error;
+        }
+      }
       const [{analyzeStep,ensureOpenCascade},{default:wasmUrl}]=await Promise.all([
         import('../lib/reference/geometry/analyze-step'),import('replicad-opencascadejs/wasm?url'),
       ]);

@@ -119,8 +119,11 @@ separate sheets. Custom sheet dimensions support remnants.
   Bent sheet metal, assemblies, tapered parts and blind/multiple-depth features
   require preparing separate flat parts in CAD first.
 - DXF supports lines, arcs, circles, polylines and non-rational splines forming
-  closed planar contours. File units are honored; unitless DXFs use your import
-  selection (inches by default). Explode unsupported blocks in CAD first.
+  closed planar contours. Declared file units are used for the initial preview;
+  unitless DXFs initially preview in inches. Each DXF requires an inches or
+  millimeters choice before it is added, and that choice can correct incorrect
+  file metadata. Unusually large or small previews suggest the alternate unit
+  without accepting it for you. Explode unsupported blocks in CAD first.
 - One connected part per file. Crossing, touching and disconnected contours or
   islands are rejected with an import error. Interior holes are retained, but
   other parts are not placed into them.

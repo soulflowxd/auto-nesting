@@ -39,6 +39,11 @@ describe("analyzeDxf", () => {
     expect(result.cutLengthIn).toBeCloseTo(4, 8);
   });
 
+  it("lets a chosen unit correct declared DXF units", () => {
+    expect(analyzeDxf(dxf(rectangle,1),'mm').boundingBox.width).toBeCloseTo(2/25.4);
+    expect(analyzeDxf(dxf(rectangle,4),'in').boundingBox.width).toBeCloseTo(2);
+  });
+
   it("requires a unit choice for unitless drawings", () => {
     expect(() => analyzeDxf(dxf(rectangle, 0))).toThrowError(GeometryError);
     expect(analyzeDxf(dxf(rectangle, 0), "mm").sourceUnit).toBe("mm");
