@@ -22,6 +22,13 @@ function inside(p: NestPoint, polygon: NestPoint[]): boolean {
   }
   return contained;
 }
+function insideHoleWithClearance(outer: NestPoint[], hole: NestPoint[], gap: number): boolean {
+  if(!outer.every(point=>inside(point,hole)))return false;
+  for(let i=0;i<outer.length;i++)for(let j=0;j<hole.length;j++){
+    if(segmentDistance(outer[i],outer[(i+1)%outer.length],hole[j],hole[(j+1)%hole.length])<Math.max(gap-EPS,EPS))return false;
+  }
+  return true;
+}
 function pointDistance(p: NestPoint,a: NestPoint,b: NestPoint) {
   const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;
   const t=l ? Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l)) : 0;
@@ -59,6 +66,10 @@ export function validateSheet(placements: NestPlacement[], settings: SheetSettin
     const flags=holeFlags(p.outline);
     return p.outline.filter((_,i)=>!flags[i]).map(l=>l.map(v=>({x:v.x+p.x,y:v.y+p.y})));
   });
+  const holes=placements.map(p=>{
+    const flags=holeFlags(p.outline);
+    return p.outline.filter((_,i)=>flags[i]).map(l=>l.map(v=>({x:v.x+p.x,y:v.y+p.y})));
+  });
   for (let i=0;i<placements.length;i++) {
     const p=placements[i];
     const points=p.outline.flat().map(v=>({x:v.x+p.x,y:v.y+p.y}));
@@ -79,6 +90,9 @@ export function validateSheet(placements: NestPlacement[], settings: SheetSettin
     for (let j=0;j<i;j++) {
       const other=placements[j];
       if(p.x>other.x+other.width+settings.gapIn || other.x>p.x+p.width+settings.gapIn || p.y>other.y+other.height+settings.gapIn || other.y>p.y+p.height+settings.gapIn) continue;
+      const nestedInOther=polygons[i].some(outer=>holes[j].some(hole=>insideHoleWithClearance(outer,hole,settings.gapIn)));
+      const otherNestedInPart=polygons[j].some(outer=>holes[i].some(hole=>insideHoleWithClearance(outer,hole,settings.gapIn)));
+      if(nestedInOther||otherNestedInPart)continue;
       let invalid=false;
       for(const a of polygons[i]) for(const b of polygons[j]) {
         if(inside(a[0],b)||inside(b[0],a)) invalid=true;

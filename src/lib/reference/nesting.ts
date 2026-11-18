@@ -12,9 +12,8 @@
  * through the cutouts would be sliced apart on the bed. A part that is mostly
  * hole rasterises to a thin skeleton, and two skeletons interleave without a
  * single cell colliding: tight on screen, impossible to cut. Cutout space is
- * therefore never offered to another part, even though a small enough one
- * could in principle sit inside, that needs a containment test rather than
- * a collision test, and getting it wrong puts scrap on the bed.
+ * offered to another part only when its whole padded footprint fits inside
+ * a cutout. A collision test alone would let skeletal parts interleave.
  *
  * Several packing strategies are run and the best result kept, because none
  * of them wins on every set of parts, see STRATEGIES.
@@ -571,9 +570,9 @@ function packWith(
        */
       const cutouts: Mask = { w: footprint.w, h: footprint.h, cells: new Uint8Array(footprint.cells.length) };
       let cutoutCells = 0;
-      // Team jobs prohibit nesting inside holes. Avoid rebuilding unused hole
-      // masks repeatedly when automatic free rotation is enabled.
-      if (options.allowInsideHoles) {
+      // Build hole masks only when cutout nesting is enabled, since automatic
+      // free rotation evaluates many candidates.
+      if (options.allowInsideHoles && outline.length > 1) {
         const material = rasterize(outline, cell, footprint);
         const grownMaterial = dilate(material, gapCells);
         for (let row = 0; row < footprint.h; row += 1) {

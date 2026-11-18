@@ -21,6 +21,10 @@ Open the URL Vite prints (normally http://127.0.0.1:5173). Geometry import,
 nesting, local project save/open and DXF export work without accounts, API keys
 or a backend connection. Upload `public/samples/bearing-plate.step` to test a
 plate with a through-hole.
+When several parts use the same material, thickness, and color, choose **One
+stock for all** during import and add them together. Choose **Set each part**
+for mixed stock. Quantities remain editable for each part, and DXF drawing
+units still require confirmation per file.
 The first STEP import loads an approximately 23 MB CAD kernel; DXF imports do
 not load it. Files are processed in browser workers and stay on your device.
 Normal use requires no account or backend storage.
@@ -125,8 +129,9 @@ separate sheets. Custom sheet dimensions support remnants.
   file metadata. Unusually large or small previews suggest the alternate unit
   without accepting it for you. Explode unsupported blocks in CAD first.
 - One connected part per file. Crossing, touching and disconnected contours or
-  islands are rejected with an import error. Interior holes are retained, but
-  other parts are not placed into them.
+  islands are rejected with an import error. Interior holes are retained;
+  smaller parts can nest inside a hole when their full outline fits with the
+  requested spacing.
 - The reused contour raster nester tries multiple placement strategies. Free
   rotation uses geometry-derived seeds and adaptive continuous angular
   refinement; constrained modes use their specified angles. It does not
