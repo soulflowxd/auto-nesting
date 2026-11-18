@@ -33,4 +33,14 @@ describe('job nesting inside a large cutout',()=>{
     expect(group.nest.sheetsUsed).toBe(2);
     expect(Object.values(group.errors).flat()).toEqual([]);
   });
+
+  it('keeps a dense multi-part layout valid for DXF export',()=>{
+    const parts=[peg(2.1),peg(1.7),peg(1.3)].map((part,index)=>({
+      ...part,id:`plate-${index}`,name:`Plate ${index}`,quantity:5,
+    }));
+    const group=nestJob(parts,{[stockId]:{...settings,widthIn:10,heightIn:10,gapIn:1.5/25.4,rotation:'free'}})[0];
+    expect(group.nest.placements).toHaveLength(15);
+    expect(group.nest.unplaced).toHaveLength(0);
+    expect(Object.values(group.errors).flat()).toEqual([]);
+  });
 });

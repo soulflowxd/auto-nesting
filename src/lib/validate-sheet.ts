@@ -59,16 +59,31 @@ export function validateOutline(loops: NestPoint[][]): string[] {
   }
   return errors;
 }
+/** Exact pair check shared by nesting and the final DXF export gate. */
+export function placementsConflict(p: NestPlacement, other: NestPlacement, gap: number): boolean {
+  if(p.x>other.x+other.width+gap || other.x>p.x+p.width+gap || p.y>other.y+other.height+gap || other.y>p.y+p.height+gap) return false;
+  const loops=(placement:NestPlacement, holes:boolean)=>{
+    const flags=holeFlags(placement.outline);
+    return placement.outline.filter((_,i)=>flags[i]===holes).map(loop=>loop.map(v=>({x:v.x+placement.x,y:v.y+placement.y})));
+  };
+  const outer=loops(p,false), otherOuter=loops(other,false);
+  const cutouts=loops(p,true), otherCutouts=loops(other,true);
+  if(outer.some(a=>otherCutouts.some(h=>insideHoleWithClearance(a,h,gap))) || otherOuter.some(a=>cutouts.some(h=>insideHoleWithClearance(a,h,gap)))) return false;
+  for(const a of outer) for(const b of otherOuter) {
+    if(inside(a[0],b)||inside(b[0],a)) return true;
+    for(let ai=0;ai<a.length;ai++) for(let bi=0;bi<b.length;bi++) {
+      const dist=segmentDistance(a[ai],a[(ai+1)%a.length],b[bi],b[(bi+1)%b.length]);
+      if(dist<=1e-10 || dist<gap-EPS) return true;
+    }
+  }
+  return false;
+}
 export function validateSheet(placements: NestPlacement[], settings: SheetSettings, sheetIndex=0): string[] {
   const errors = settingsErrors(settings);
   if (errors.length) return errors;
   const polygons=placements.map(p => {
     const flags=holeFlags(p.outline);
     return p.outline.filter((_,i)=>!flags[i]).map(l=>l.map(v=>({x:v.x+p.x,y:v.y+p.y})));
-  });
-  const holes=placements.map(p=>{
-    const flags=holeFlags(p.outline);
-    return p.outline.filter((_,i)=>flags[i]).map(l=>l.map(v=>({x:v.x+p.x,y:v.y+p.y})));
   });
   for (let i=0;i<placements.length;i++) {
     const p=placements[i];
@@ -87,22 +102,7 @@ export function validateSheet(placements: NestPlacement[], settings: SheetSettin
       }
       if(invalid)errors.push(`${p.label}: overlaps a marked used area or its spacing.`);
     }
-    for (let j=0;j<i;j++) {
-      const other=placements[j];
-      if(p.x>other.x+other.width+settings.gapIn || other.x>p.x+p.width+settings.gapIn || p.y>other.y+other.height+settings.gapIn || other.y>p.y+p.height+settings.gapIn) continue;
-      const nestedInOther=polygons[i].some(outer=>holes[j].some(hole=>insideHoleWithClearance(outer,hole,settings.gapIn)));
-      const otherNestedInPart=polygons[j].some(outer=>holes[i].some(hole=>insideHoleWithClearance(outer,hole,settings.gapIn)));
-      if(nestedInOther||otherNestedInPart)continue;
-      let invalid=false;
-      for(const a of polygons[i]) for(const b of polygons[j]) {
-        if(inside(a[0],b)||inside(b[0],a)) invalid=true;
-        for(let ai=0;ai<a.length&&!invalid;ai++) for(let bi=0;bi<b.length;bi++) {
-          const dist=segmentDistance(a[ai],a[(ai+1)%a.length],b[bi],b[(bi+1)%b.length]);
-          if(dist<=1e-10 || dist < settings.gapIn-EPS) {invalid=true;break;}
-        }
-      }
-      if(invalid) errors.push(`${p.label} and ${other.label}: overlap or insufficient spacing.`);
-    }
+    for (let j=0;j<i;j++) if(placementsConflict(p,placements[j],settings.gapIn)) errors.push(`${p.label} and ${placements[j].label}: overlap or insufficient spacing.`);
   }
   return errors;
 }

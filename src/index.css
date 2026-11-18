@@ -221,8 +221,10 @@ label{color:#3b4b5a;font-weight:500}
 .pending-part-preview{background:#f5fbff;border-color:#d9e9f3}
 .pending-part-preview span,.part-index{color:#0878bb;text-transform:uppercase;font-weight:600}
 .pending-part-preview strong{color:#324d64}
-.part-dxf-action{color:#0878bb}
+.part-dxf-action{background:#eaf6fd;border-color:#a9d6ef;color:#075b91}
 .part-dxf-action:hover:not(:disabled){background:#e7f6ff;border-color:#1aa7f7}
+.part-dxf-action:disabled{opacity:1;background:#f1f5f7;border-color:#d6e0e7;color:#637d92}
+.choose-other-stock{min-width:0;border-top:1px solid #d8e6f0;padding-top:8px}.choose-other-stock summary{cursor:pointer;color:#075b91;font-size:11px;font-weight:600}.choose-other-stock[open]{display:grid;gap:10px}.choose-other-stock .secondary-button{width:100%}.current-stock-label{overflow-wrap:anywhere;color:#617287;font-size:10px;line-height:1.4;text-align:center}
 .stock-summary{background:#f4faff;border-color:#d4e6f1}
 .unit-switch button.active,.used-area-unit button.active,.used-area-toolbar button.active{background:#0d1117;border-color:#0d1117;color:#fff}
 .used-area-toolbar .used-area-hint{color:#0878bb}
@@ -356,7 +358,13 @@ html[data-theme='dark'] input::placeholder{color:#91a7b9}
 html[data-theme='dark'] .part-card,html[data-theme='dark'] .pending-part,html[data-theme='dark'] .stock-summary,html[data-theme='dark'] .pending-part-preview,html[data-theme='dark'] .used-area-editor,html[data-theme='dark'] .selection-detail,html[data-theme='dark'] .cloud-project-row{background:#24262a;border-color:#42464b;color:#eceef1}
 html[data-theme='dark'] .pending-preview-art,html[data-theme='dark'] .part-thumb{background:#f7fbff;border-color:#456073}
 html[data-theme='dark'] .drop-zone{background:#20252a;border-color:#397da5;color:#87d5ff}
-html[data-theme='dark'] .drop-zone strong,html[data-theme='dark'] .part-dxf-action{color:#8cd9ff}
+html[data-theme='dark'] .drop-zone strong{color:#8cd9ff}
+html[data-theme='dark'] .part-dxf-action{background:#18334a;border-color:#356686;color:#b3e5ff}
+html[data-theme='dark'] .part-dxf-action:hover:not(:disabled){background:#244762;border-color:#58a9d3}
+html[data-theme='dark'] .part-dxf-action:disabled{background:#25303a;border-color:#44515d;color:#9cb5c7}
+html[data-theme='dark'] .choose-other-stock{border-color:#42464b}
+html[data-theme='dark'] .choose-other-stock summary{color:#a4dfff}
+html[data-theme='dark'] .current-stock-label{color:#a9bccd}
 html[data-theme='dark'] .drop-zone span{color:#aac0cf}
 html[data-theme='dark'] .drop-zone.dragging{background:#1b3c52}
 html[data-theme='dark'] .sheet-toolbar,html[data-theme='dark'] .sheet-tabs,html[data-theme='dark'] .used-area-toolbar{background:#24262a;border-color:#42464b;color:#e1e5e9}

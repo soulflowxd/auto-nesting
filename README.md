@@ -25,6 +25,9 @@ When several parts use the same material, thickness, and color, choose **One
 stock for all** during import and add them together. Choose **Set each part**
 for mixed stock. Quantities remain editable for each part, and DXF drawing
 units still require confirmation per file.
+If the job already contains one stock, a later individual import can use
+**Add with current stock** instead of selecting material, thickness, and color
+again. **Choose a different stock** keeps mixed-stock imports available.
 The first STEP import loads an approximately 23 MB CAD kernel; DXF imports do
 not load it. Files are processed in browser workers and stay on your device.
 Normal use requires no account or backend storage.
@@ -137,8 +140,9 @@ separate sheets. Custom sheet dimensions support remnants.
   refinement; constrained modes use their specified angles. It does not
   guarantee the mathematical optimum. Grid rounding can
   leave more space than requested; spacing is a minimum. Oversized parts are
-  reported rather than silently dropped. Each sheet is geometrically checked
-  for containment, intersections and clearance before export.
+  reported rather than silently dropped. Raster candidates are checked against
+  exact contour spacing before placement, and each sheet is geometrically
+  checked for containment, intersections and clearance before export.
 - Curves are tessellated: DXF arcs/circles at 2° steps, STEP circles at 90 samples
   per edge and other STEP curves at 128 samples. Chord error depends on curve
   size (a full 90-segment circle has about 0.061% radius chord deviation).

@@ -23,6 +23,7 @@
  */
 
 import { freeRotationSeeds, refineFreeRotation } from './free-rotation.js';
+import { placementsConflict } from '../validate-sheet.js';
 
 export type NestPoint = { x: number; y: number };
 
@@ -375,6 +376,7 @@ function stamp(sheet: Bitmask, mask: Bitmask, originCol: number, originRow: numb
 }
 
 type Spot = { col: number; row: number; cost: number };
+const acceptSpot: (col: number, row: number) => boolean = () => true;
 
 /**
  * Bottom-left fill: the lowest row that fits, then the leftmost column in it.
@@ -384,11 +386,11 @@ type Spot = { col: number; row: number; cost: number };
  * `from` is a spot, as row * width + col, known to be no later than the first
  * one that fits, so the scan can start there; see SearchMemo.
  */
-function findBottomLeft(sheet: Sheet, mask: Bitmask, from = 0): Spot | null {
+function findBottomLeft(sheet: Sheet, mask: Bitmask, from = 0, exact = acceptSpot): Spot | null {
   const startRow = Math.floor(from / sheet.grid.w);
   for (let row = startRow; row + mask.h <= sheet.grid.h; row += 1) {
     for (let col = row === startRow ? from % sheet.grid.w : 0; col + mask.w <= sheet.grid.w; col += 1) {
-      if (canPlace(sheet, mask, col, row)) return { col, row, cost: row * sheet.grid.w + col };
+      if (canPlace(sheet, mask, col, row) && exact(col,row)) return { col, row, cost: row * sheet.grid.w + col };
     }
   }
   return null;
@@ -401,7 +403,8 @@ function findBottomLeft(sheet: Sheet, mask: Bitmask, from = 0): Spot | null {
  *, tighter to look at, but it can leave an L-shaped remainder too narrow for
  * the next part. Which of the two wins depends on the parts, so both run.
  */
-function findTightest(sheet: Sheet, mask: Bitmask): Spot | null {
+function findTightest(sheet: Sheet, mask: Bitmask, from = 0, exact = acceptSpot): Spot | null {
+  void from;
   let best: Spot | null = null;
   for (let row = 0; row + mask.h <= sheet.grid.h; row += 1) {
     const rowMin=Math.min(sheet.used?.minRow??row,row);
@@ -424,7 +427,7 @@ function findTightest(sheet: Sheet, mask: Bitmask): Spot | null {
         if(col>=(sheet.used?.minCol??0))break;
         continue;
       }
-      if (!canPlace(sheet, mask, col, row)) continue;
+      if (!canPlace(sheet, mask, col, row) || !exact(col,row)) continue;
       best = { col, row, cost };
     }
   }
@@ -434,7 +437,7 @@ function findTightest(sheet: Sheet, mask: Bitmask): Spot | null {
 type Strategy = {
   /** Angles a contoured part may be turned to. */
   rotations: number[];
-  find: (sheet: Sheet, mask: Bitmask, from: number) => Spot | null;
+  find: (sheet: Sheet, mask: Bitmask, from: number, exact: (col: number, row: number) => boolean) => Spot | null;
   /**
    * Whether the spot found is the first that fits in scan order, so the next
    * search for the same mask on the same sheet may start from it.
@@ -659,12 +662,22 @@ function packWith(
       const spread = (fit: CandidateFit) => ((fit.col + fit.candidate.padding) * cell + fit.candidate.width) * ((fit.row + fit.candidate.padding) * cell + fit.candidate.height);
       const betterFit = (a: CandidateFit, b: CandidateFit) => a.cost < b.cost || (a.cost === b.cost && spread(a) < spread(b) - 1e-12);
       let best: CandidateFit | null = null;
+      const exactFit = (candidate: Candidate) => (col: number, row: number) => {
+        const proposed: NestPlacement = {
+          partId: unit.id, label: unit.label, sheetIndex, sheetId: sheet.id,
+          x: options.marginIn + (col + candidate.padding) * cell,
+          y: options.marginIn + (row + candidate.padding) * cell,
+          width: candidate.width, height: candidate.height,
+          rotationDeg: candidate.rotationDeg, outline: candidate.outline,
+        };
+        return !placements.some(previous => previous.sheetIndex === sheetIndex && placementsConflict(proposed,previous,options.gapIn));
+      };
       for (let index = 0; index < candidates.length; index += 1) {
         const candidate = candidates[index];
         const key = `${sheetIndex}:${unit.id}:${index}`;
         const known = memo.get(key);
         if (known === -1) continue;
-        const spot = strategy.find(sheet, candidate.padded, strategy.resumable ? known ?? 0 : 0);
+        const spot = strategy.find(sheet, candidate.padded, strategy.resumable ? known ?? 0 : 0, exactFit(candidate));
         if (!spot) {
           memo.set(key, -1);
           continue;
@@ -680,7 +693,7 @@ function packWith(
       if (options.freeRotation) {
         const refined = refineFreeRotation(best, fit => fit.candidate.rotationDeg, angle => {
           const candidate = candidateAt(unit, angle);
-          const spot = strategy.find(sheet, candidate.padded, 0);
+          const spot = strategy.find(sheet, candidate.padded, 0, exactFit(candidate));
           return spot ? {candidate, ...spot} : null;
         }, betterFit);
         if (refined !== best) {
